@@ -3,15 +3,18 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "ksol"
+name = "koala"
 version = "0.1.0"
 description = "K Semantics for the Solana ecosystem"
 authors = [
     "Runtime Verification, Inc. <contact@runtimeverification.com>",
 ]
 
+[tool.poetry.scripts]
+koala = "koala.__main__:main"
+
 [tool.poetry.plugins.kdist]
-sol-semantics = "ksol.kdist.plugin"
+sol-semantics = "koala.kdist.plugin"
 
 [tool.poetry.dependencies]
 python = "^3.10"
