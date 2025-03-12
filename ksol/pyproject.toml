@@ -12,6 +12,7 @@ authors = [
 
 [tool.poetry.dependencies]
 python = "^3.10"
+kmir = { git = "https://github.com/runtimeverification/mir-semantics.git", rev = "4b60355a1f90caa6b52edef51db9d9c593095ac5", subdirectory = "kmir" }
 
 [tool.poetry.group.dev.dependencies]
 autoflake = "*"

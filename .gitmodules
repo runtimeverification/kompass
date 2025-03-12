@@ -1,3 +1,0 @@
-[submodule "deps/mir-semantics"]
-	path = deps/mir-semantics
-	url = https://github.com/runtimeverification/mir-semantics.git
