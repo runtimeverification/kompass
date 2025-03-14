@@ -3,7 +3,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "koala"
+name = "kompass"
 version = "0.1.0"
 description = "K Semantics for the Solana ecosystem"
 authors = [
@@ -11,10 +11,10 @@ authors = [
 ]
 
 [tool.poetry.scripts]
-koala = "koala.__main__:main"
+kompass = "kompass.__main__:main"
 
 [tool.poetry.plugins.kdist]
-sol-semantics = "koala.kdist.plugin"
+sol-semantics = "kompass.kdist.plugin"
 
 [tool.poetry.dependencies]
 python = "^3.10"

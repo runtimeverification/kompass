@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
 
-def koala(args: Sequence[str]) -> None:
+def kompass(args: Sequence[str]) -> None:
     ns, remaining = _arg_parser().parse_known_args(args)
 
     match ns.command:
@@ -52,4 +52,4 @@ def _arg_parser() -> ArgumentParser:
 
 
 def main() -> None:
-    koala(sys.argv[1:])
+    kompass(sys.argv[1:])
