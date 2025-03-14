@@ -14,7 +14,7 @@ authors = [
 kompass = "kompass.__main__:main"
 
 [tool.poetry.plugins.kdist]
-sol-semantics = "kompass.kdist.plugin"
+kompass = "kompass.kdist.plugin"
 
 [tool.poetry.dependencies]
 python = "^3.10"
