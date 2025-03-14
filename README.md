@@ -1,4 +1,4 @@
-# ksol
+# kompass
 
 
 ## Installation

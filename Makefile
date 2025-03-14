@@ -42,7 +42,7 @@ COV_ARGS :=
 
 cov: cov-all
 
-cov-%: TEST_ARGS += --cov=ksol --no-cov-on-fail --cov-branch --cov-report=term
+cov-%: TEST_ARGS += --cov=kompass --no-cov-on-fail --cov-branch --cov-report=term
 
 cov-all: TEST_ARGS += --cov-report=html:cov-all-html $(COV_ARGS)
 cov-all: test-all

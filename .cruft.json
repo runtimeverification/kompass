@@ -4,9 +4,9 @@
   "checkout": null,
   "context": {
     "cookiecutter": {
-      "project_name": "ksol",
-      "project_slug": "ksol",
-      "package_name": "ksol",
+      "project_name": "kompass",
+      "project_slug": "kompass",
+      "package_name": "kompass",
       "version": "0.1.0",
       "description": "K Semantics for the Solana ecosystem",
       "author_name": "Runtime Verification, Inc.",

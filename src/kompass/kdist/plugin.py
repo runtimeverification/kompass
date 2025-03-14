@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from typing import Any, Final
 
 # MIR_SOURCE: Final = kdist.get('mir-semantics.source')
-KSRC_DIR: Final = Path(__file__).parent / 'sol-semantics'
+KSRC_DIR: Final = Path(__file__).parent / 'kompass'
 
 
 class KSolanaKompileTarget(Target):
@@ -34,4 +34,4 @@ class KSolanaKompileTarget(Target):
         return ('mir-semantics.source',)
 
 
-__TARGETS__: Final = {'llvm': KSolanaKompileTarget({'main_file': KSRC_DIR / 'ksol.md', 'backend': 'llvm'})}
+__TARGETS__: Final = {'llvm': KSolanaKompileTarget({'main_file': KSRC_DIR / 'kompass.md', 'backend': 'llvm'})}

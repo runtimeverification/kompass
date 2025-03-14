@@ -1,5 +1,5 @@
 {
-  description = "ksol - K Semantics for the Solana ecosystem";
+  description = "kompass - K Semantics for the Solana ecosystem";
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-22.05";
     flake-utils.url = "github:numtide/flake-utils";
@@ -10,7 +10,7 @@
       allOverlays = [
         poetry2nix.overlay
         (final: prev: {
-          ksol = prev.poetry2nix.mkPoetryApplication {
+          kompass = prev.poetry2nix.mkPoetryApplication {
             python = prev.python310;
             projectDir = ./.;
             groups = [];
@@ -32,8 +32,8 @@
         };
       in {
         packages = rec {
-          inherit (pkgs) ksol;
-          default = ksol;
+          inherit (pkgs) kompass;
+          default = kompass;
         };
       }) // {
         overlay = nixpkgs.lib.composeManyExtensions allOverlays;

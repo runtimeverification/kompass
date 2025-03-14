@@ -1,7 +1,7 @@
 ```k
 requires "kmir.md"
 
-module KSOL
+module KOMPASS
   imports KMIR
 
   configuration
