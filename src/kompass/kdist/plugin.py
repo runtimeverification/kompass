@@ -5,13 +5,12 @@ from typing import TYPE_CHECKING
 
 from pyk.kdist import kdist
 from pyk.kdist.api import Target
-from pyk.ktool.kompile import kompile
+from pyk.ktool.kompile import LLVMKompileType, kompile
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
     from typing import Any, Final
 
-# MIR_SOURCE: Final = kdist.get('mir-semantics.source')
 KSRC_DIR: Final = Path(__file__).parent / 'kompass'
 
 
@@ -34,4 +33,10 @@ class KSolanaKompileTarget(Target):
         return ('mir-semantics.source',)
 
 
-__TARGETS__: Final = {'llvm': KSolanaKompileTarget({'main_file': KSRC_DIR / 'kompass.md', 'backend': 'llvm'})}
+__TARGETS__: Final = {
+    'llvm': KSolanaKompileTarget({'main_file': KSRC_DIR / 'kompass.md', 'backend': 'llvm'}),
+    'llvm-library': KSolanaKompileTarget(
+        {'main_file': KSRC_DIR / 'kompass.md', 'backend': 'llvm', 'llvm_kompile_type': LLVMKompileType.C}
+    ),
+    'haskell': KSolanaKompileTarget({'main_file': KSRC_DIR / 'kompass.md', 'backend': 'haskell'}),
+}
