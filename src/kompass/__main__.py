@@ -7,10 +7,14 @@ from typing import TYPE_CHECKING
 
 from kmir.__main__ import _arg_parser, _parse_args
 from kmir.cargo import CargoProject
-from kmir.options import RunOpts
+from kmir.options import ProveRSOpts, RunOpts, ShowOpts, ViewOpts
 from kmir.parse.parser import parse_json
+from kmir.smir import SMIRInfo
+from pyk.proof.reachability import APRProof
+from pyk.proof.show import APRProofShow
+from pyk.proof.tui import APRProofViewer
 
-from kompass.kompass import HASKELL_DEF_DIR, LLVM_DEF_DIR, Kompass
+from kompass.kompass import HASKELL_DEF_DIR, LLVM_DEF_DIR, LLVM_LIB_DIR, Kompass, KompassAPRNodePrinter
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -25,6 +29,12 @@ def kompass(args: Sequence[str]) -> None:
     match opts:
         case RunOpts():
             _kompass_run(opts)
+        case ProveRSOpts():
+            _kompass_prove_rs(opts)
+        case ShowOpts():
+            _kompass_show(opts)
+        case ViewOpts():
+            _kompass_view(opts)
         case _:
             raise AssertionError
 
@@ -48,6 +58,37 @@ def _kompass_run(opts: RunOpts) -> None:
 
     result = kompass.run_parsed(kompass_kast, opts.start_symbol, opts.depth)
     print(kompass.kore_to_pretty(result))
+
+
+def _kompass_prove_rs(opts: ProveRSOpts) -> None:
+    kompass = Kompass(HASKELL_DEF_DIR, LLVM_LIB_DIR, bug_report=opts.bug_report)
+    proof = kompass.prove_rs(opts)
+    print(str(proof.summary))
+    if not proof.passed:
+        sys.exit(1)
+
+
+def _kompass_show(opts: ShowOpts) -> None:
+    kompass = Kompass(HASKELL_DEF_DIR, LLVM_LIB_DIR)
+    proof = APRProof.read_proof_data(opts.proof_dir, opts.id)
+    smir_info = None
+    if opts.smir_info is not None:
+        smir_info = SMIRInfo(opts.smir_info)
+    node_printer = KompassAPRNodePrinter(kompass, proof, smir_info=smir_info, full_printer=opts.full_printer)
+    shower = APRProofShow(kompass, node_printer=node_printer)
+    lines = shower.show(proof)
+    print('\n'.join(lines))
+
+
+def _kompass_view(opts: ViewOpts) -> None:
+    kompass = Kompass(HASKELL_DEF_DIR, LLVM_LIB_DIR)
+    proof = APRProof.read_proof_data(opts.proof_dir, opts.id)
+    smir_info = None
+    if opts.smir_info is not None:
+        smir_info = SMIRInfo(opts.smir_info)
+    node_printer = KompassAPRNodePrinter(kompass, proof, smir_info=smir_info, full_printer=False)
+    viewer = APRProofViewer(proof, kompass, node_printer=node_printer)
+    viewer.run()
 
 
 def _run_build(args: Sequence[str]) -> None:

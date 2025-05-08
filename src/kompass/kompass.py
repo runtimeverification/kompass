@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from kmir.kmir import KMIR
+from kmir.kmir import KMIR, KMIRAPRNodePrinter
 from pyk.kdist import kdist
 
 if TYPE_CHECKING:
@@ -14,3 +14,6 @@ HASKELL_DEF_DIR: Final = kdist.which('kompass.haskell')
 
 
 class Kompass(KMIR): ...
+
+
+class KompassAPRNodePrinter(KMIRAPRNodePrinter): ...

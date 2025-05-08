@@ -488,8 +488,8 @@ wheels = [
 
 [[package]]
 name = "kmir"
-version = "0.3.149"
-source = { git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=79e5d699ed9c7e0344819940707b8d9654d784c5#79e5d699ed9c7e0344819940707b8d9654d784c5" }
+version = "0.3.151"
+source = { git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=f46fd8fdf46cb8aa22e1ad4f4728b2fd52564196#f46fd8fdf46cb8aa22e1ad4f4728b2fd52564196" }
 dependencies = [
     { name = "kframework" },
 ]
@@ -522,7 +522,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "kmir", git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=79e5d699ed9c7e0344819940707b8d9654d784c5" }]
+requires-dist = [{ name = "kmir", git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=f46fd8fdf46cb8aa22e1ad4f4728b2fd52564196" }]
 
 [package.metadata.requires-dev]
 dev = [
