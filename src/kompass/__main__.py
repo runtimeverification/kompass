@@ -2,25 +2,52 @@ from __future__ import annotations
 
 import os
 import sys
-from argparse import ArgumentParser
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from kmir.__main__ import main as kmir_main
+from kmir.__main__ import _arg_parser, _parse_args
+from kmir.cargo import CargoProject
+from kmir.options import RunOpts
+from kmir.parse.parser import parse_json
+
+from kompass.kompass import HASKELL_DEF_DIR, LLVM_DEF_DIR, Kompass
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
 
 def kompass(args: Sequence[str]) -> None:
-    ns, remaining = _arg_parser().parse_known_args(args)
+    parser = _arg_parser()
+    parser.prog = 'kompass'
+    ns, remaining = parser.parse_known_args(args)
 
-    match ns.command:
-        case 'run' | 'prove':
-            kmir_main()
-            sys.exit(0)
-        case 'build':
-            _run_build(remaining)
+    opts = _parse_args(ns)
+    match opts:
+        case RunOpts():
+            _kompass_run(opts)
+        case _:
+            raise AssertionError
+
+
+def _kompass_run(opts: RunOpts) -> None:
+    kompass = Kompass(HASKELL_DEF_DIR) if opts.haskell_backend else Kompass(LLVM_DEF_DIR)
+
+    smir_file: Path
+    if opts.file:
+        smir_file = Path(opts.file).resolve()
+    else:
+        cargo = CargoProject(Path.cwd())
+        target = opts.bin if opts.bin else cargo.default_target
+        smir_file = cargo.smir_for(target)
+
+    parse_result = parse_json(kompass.definition, smir_file, 'Pgm')
+    if parse_result is None:
+        print('Parse error!', file=sys.stderr)
+        sys.exit(1)
+    kompass_kast, _ = parse_result
+
+    result = kompass.run_parsed(kompass_kast, opts.start_symbol, opts.depth)
+    print(kompass.kore_to_pretty(result))
 
 
 def _run_build(args: Sequence[str]) -> None:
@@ -37,18 +64,6 @@ def _run_build(args: Sequence[str]) -> None:
     os.environ['RUSTC'] = str(stable_mir_script)
 
     os.execvpe('cargo', ['cargo', 'build', *args], os.environ)
-
-
-def _arg_parser() -> ArgumentParser:
-    parser = ArgumentParser(prog=sys.argv[0])
-
-    command_parser = parser.add_subparsers(dest='command', required=True)
-
-    command_parser.add_parser('run', help='Run a stable MIR solana program')
-    command_parser.add_parser('prove', help='Run proofs over a stable MIR solana program')
-    command_parser.add_parser('build', help='Compile a solana program into stable MIR')
-
-    return parser
 
 
 def main() -> None:
