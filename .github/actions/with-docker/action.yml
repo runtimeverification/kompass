@@ -1,0 +1,47 @@
+name: 'With Docker'
+description: 'Run a given stage with Docker Image'
+inputs:
+  container-name:
+    description: 'Docker container name to use'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+  - name: 'Install uv'
+    uses: astral-sh/setup-uv@v5
+    with:
+      version: 0.7.2
+  - name: 'Set up Docker'
+    shell: bash {0}
+    env:
+      CONTAINER_NAME: ${{ inputs.container-name }}
+    run: |
+      set -euxo pipefail
+
+      TAG=runtimeverificationinc/${CONTAINER_NAME}
+      K_COMMIT=$(uv tree | grep kframework | grep -Po '[0-9.]+')
+
+      USER=github-user
+      GROUP=${USER}
+      USER_ID=1000
+      GROUP_ID=${USER_ID}
+
+      docker build . --tag ${TAG}           \
+        --file .github/workflows/Dockerfile \
+        --build-arg K_COMMIT=${K_COMMIT}    \
+        --build-arg USER=${USER}            \
+        --build-arg GROUP=${GROUP}          \
+        --build-arg USER_ID=${USER_ID}      \
+        --build-arg GROUP_ID=${GROUP_ID}
+
+      docker run                          \
+        --name ${CONTAINER_NAME}          \
+        --rm                              \
+        --interactive                     \
+        --tty                             \
+        --detach                          \
+        --workdir /home/${USER}/workspace \
+        ${TAG}
+
+      docker cp . ${CONTAINER_NAME}:/home/${USER}/workspace
+      docker exec --user root ${CONTAINER_NAME} chown -R ${USER}:${GROUP} /home/${USER}/workspace

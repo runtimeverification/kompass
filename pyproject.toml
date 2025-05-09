@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "kompass"
-version = "0.1.0"
+version = "0.1.1"
 description = "K Semantics for the Solana ecosystem"
 requires-python = "~=3.10"
 dependencies = [
