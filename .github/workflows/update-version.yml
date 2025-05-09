@@ -1,0 +1,53 @@
+name: 'Update Version'
+on:
+  push:
+    branches:
+      - '_update-deps/runtimeverification/k'
+      - '_update-deps/runtimeverification/stable-mir-json'
+  workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  update-versions:
+    name: 'Update pyk version'
+    runs-on: [self-hosted, linux, flyweight]
+    steps:
+      - name: 'Check out code'
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.JENKINS_GITHUB_PAT }}
+          submodules: true
+      - name: 'Install uv'
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo ${HOME}/.local/bin >> $GITHUB_PATH
+          uv --version
+      - name: 'Update pyk release tag'
+        run: |
+          K_VERSION=$(cat ./deps/k_release)
+          cd kmir
+          sed -i 's!    "kframework==v[0-9\.]*",!    "kframework==v'${K_VERSION}'",!' pyproject.toml
+          uv lock --upgrade
+          git add pyproject.toml uv.lock
+          git commit -m 'kmir/{pyproject.toml,uv.lock}: sync uv files, K version '${K_VERSION} || true
+      - name: 'Update stable-mir-json submodule'
+        run: |
+          VERSION=$(cat ./deps/stable-mir-json_release)
+          cd deps/stable-mir-json/
+          git fetch --all
+          git checkout "${VERSION}"
+          cd ../..
+          git add deps/stable-mir-json
+          git commit -m "deps/stable-mir-json: sync submodule ${VERSION}" || true
+      - name: 'Update Nix flake inputs'
+        run: |
+          K_VERSION=$(cat deps/k_release)
+          sed -i 's!    k-framework.url = "github:runtimeverification/k/[v0-9\.]*"!    k-framework.url = "github:runtimeverification/k/v'"${K_VERSION}"'"!' flake.nix
+          nix --extra-experimental-features 'nix-command flakes' --show-trace flake update
+          git add flake.nix flake.lock
+          git commit -m 'flake.{nix,lock}: update Nix derivations' || true
+      - name: 'Push updates'
+        run: git push
