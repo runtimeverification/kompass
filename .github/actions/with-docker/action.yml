@@ -7,6 +7,10 @@ inputs:
 runs:
   using: 'composite'
   steps:
+  - name: 'Install uv'
+    uses: astral-sh/setup-uv@v5
+    with:
+      version: 0.7.2
   - name: 'Set up Docker'
     shell: bash {0}
     env:
@@ -15,7 +19,7 @@ runs:
       set -euxo pipefail
 
       TAG=runtimeverificationinc/${CONTAINER_NAME}
-      K_COMMIT=$(grep -Po '[0-9.]+' ./deps/k_release)
+      K_COMMIT=$(uv tree | grep kframework | grep -Po '[0-9.]+')
 
       USER=github-user
       GROUP=${USER}
