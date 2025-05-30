@@ -9,8 +9,9 @@ from typing import TYPE_CHECKING
 from kmir.__main__ import _arg_parser, _parse_args
 from kmir.cargo import CargoProject
 from kmir.options import ProveRawOpts, ProveRSOpts, PruneOpts, RunOpts, ShowOpts, ViewOpts
-from kmir.parse.parser import parse_json
 from kmir.smir import SMIRInfo
+from pyk.cterm.show import CTermShow
+from pyk.kast.pretty import PrettyPrinter
 from pyk.proof.reachability import APRProof, APRProver
 from pyk.proof.show import APRProofShow
 from pyk.proof.tui import APRProofViewer
@@ -56,19 +57,15 @@ def _kompass_run(opts: RunOpts) -> None:
 
     smir_file: Path
     if opts.file:
-        smir_file = Path(opts.file).resolve()
+        smir_file = Path(opts.file)
     else:
         cargo = CargoProject(Path.cwd())
         target = opts.bin if opts.bin else cargo.default_target
         smir_file = cargo.smir_for(target)
 
-    parse_result = parse_json(kompass.definition, smir_file, 'Pgm')
-    if parse_result is None:
-        print('Parse error!', file=sys.stderr)
-        sys.exit(1)
-    kompass_kast, _ = parse_result
+    smir_info = SMIRInfo.from_file(smir_file)
 
-    result = kompass.run_parsed(kompass_kast, opts.start_symbol, opts.depth)
+    result = kompass.run_smir(smir_info, start_symbol=opts.start_symbol, depth=opts.depth)
     print(kompass.kore_to_pretty(result))
 
 
@@ -103,11 +100,11 @@ def _kompass_prove_raw(opts: ProveRawOpts) -> None:
 def _kompass_show(opts: ShowOpts) -> None:
     kompass = Kompass(HASKELL_DEF_DIR, LLVM_LIB_DIR)
     proof = APRProof.read_proof_data(opts.proof_dir, opts.id)
-    smir_info = None
-    if opts.smir_info is not None:
-        smir_info = SMIRInfo(opts.smir_info)
-    node_printer = KompassAPRNodePrinter(kompass, proof, smir_info=smir_info, full_printer=opts.full_printer)
-    shower = APRProofShow(kompass, node_printer=node_printer)
+    printer = PrettyPrinter(kompass.definition)
+    omit_labels = ('<currentBody>',) if opts.omit_current_body else ()
+    cterm_show = CTermShow(printer.print, omit_labels=omit_labels)
+    node_printer = KompassAPRNodePrinter(cterm_show, proof, opts)
+    shower = APRProofShow(kompass.definition, node_printer=node_printer)
     lines = shower.show(proof)
     print('\n'.join(lines))
 
@@ -115,11 +112,12 @@ def _kompass_show(opts: ShowOpts) -> None:
 def _kompass_view(opts: ViewOpts) -> None:
     kompass = Kompass(HASKELL_DEF_DIR, LLVM_LIB_DIR)
     proof = APRProof.read_proof_data(opts.proof_dir, opts.id)
-    smir_info = None
-    if opts.smir_info is not None:
-        smir_info = SMIRInfo(opts.smir_info)
-    node_printer = KompassAPRNodePrinter(kompass, proof, smir_info=smir_info, full_printer=False)
-    viewer = APRProofViewer(proof, kompass, node_printer=node_printer)
+    printer = PrettyPrinter(kompass.definition)
+    omit_labels = ('<currentBody>',) if opts.omit_current_body else ()
+    cterm_show = CTermShow(printer.print, omit_labels=omit_labels)
+    opts.full_printer = False
+    node_printer = KompassAPRNodePrinter(cterm_show, proof, opts)
+    viewer = APRProofViewer(proof, kompass, node_printer=node_printer, cterm_show=cterm_show)
     viewer.run()
 
 
