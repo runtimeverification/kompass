@@ -465,7 +465,7 @@ wheels = [
 
 [[package]]
 name = "kframework"
-version = "7.1.249"
+version = "7.1.259"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "coloredlogs" },
@@ -481,22 +481,22 @@ dependencies = [
     { name = "tomli" },
     { name = "xdg-base-dirs" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ff/eb/39ef69fd0ff32b635e6417270ea544bb2dcc90f7fe932a47cd60177a87d4/kframework-7.1.249.tar.gz", hash = "sha256:9799184daf5127e48463f3aa69ce4043858f9a284aacb43c21cddcfee4bbd168", size = 240614, upload-time = "2025-05-04T20:57:09.431Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b6/14/1311a386f905beb5d526416802efa24c234b487d0bc77c1df64146471ca6/kframework-7.1.259.tar.gz", hash = "sha256:5ab5362909c4773cf612240e8b60508e43a474f98557ed77b2a4bb1209a912fb", size = 242310, upload-time = "2025-05-22T14:01:55.836Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a6/ff/2736d0c47a73648c209714adc24dbc3b69f1a0ae7c3cb8554525186d1cf1/kframework-7.1.249-py3-none-any.whl", hash = "sha256:690775876a0b88c04947e1e3b2e69648a1852e025138a22c663004ef632cff07", size = 291345, upload-time = "2025-05-04T20:57:08.088Z" },
+    { url = "https://files.pythonhosted.org/packages/58/30/461960dc0d886a1c6351f5516ac36a0d89109da5625228b00b0856387f40/kframework-7.1.259-py3-none-any.whl", hash = "sha256:52d7a0f2fd57eff7309b0d8d5a1d0303962c899cbe950248692ddbd5aace97e9", size = 293400, upload-time = "2025-05-22T14:01:53.866Z" },
 ]
 
 [[package]]
 name = "kmir"
-version = "0.3.151"
-source = { git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=f46fd8fdf46cb8aa22e1ad4f4728b2fd52564196#f46fd8fdf46cb8aa22e1ad4f4728b2fd52564196" }
+version = "0.3.181"
+source = { git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=8cae56fb578d96d0ef611663c66a614ddca9ff8b#8cae56fb578d96d0ef611663c66a614ddca9ff8b" }
 dependencies = [
     { name = "kframework" },
 ]
 
 [[package]]
 name = "kompass"
-version = "0.1.1"
+version = "0.1.2"
 source = { editable = "." }
 dependencies = [
     { name = "kmir" },
@@ -522,7 +522,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "kmir", git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=f46fd8fdf46cb8aa22e1ad4f4728b2fd52564196" }]
+requires-dist = [{ name = "kmir", git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=8cae56fb578d96d0ef611663c66a614ddca9ff8b" }]
 
 [package.metadata.requires-dev]
 dev = [
