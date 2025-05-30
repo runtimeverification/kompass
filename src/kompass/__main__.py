@@ -28,30 +28,6 @@ _LOGGER: Final = logging.getLogger(__name__)
 _LOG_FORMAT: Final = '%(levelname)s %(asctime)s %(name)s - %(message)s'
 
 
-def kompass(args: Sequence[str]) -> None:
-    parser = _arg_parser()
-    parser.prog = 'kompass'
-    ns, remaining = parser.parse_known_args(args)
-    logging.basicConfig(level=_loglevel(ns), format=_LOG_FORMAT)
-
-    opts = _parse_args(ns)
-    match opts:
-        case RunOpts():
-            _kompass_run(opts)
-        case ProveRSOpts():
-            _kompass_prove_rs(opts)
-        case ProveRawOpts():
-            _kompass_prove_raw(opts)
-        case ShowOpts():
-            _kompass_show(opts)
-        case ViewOpts():
-            _kompass_view(opts)
-        case PruneOpts():
-            _kompass_prune(opts)
-        case _:
-            raise AssertionError
-
-
 def _kompass_run(opts: RunOpts) -> None:
     kompass = Kompass(HASKELL_DEF_DIR) if opts.haskell_backend else Kompass(LLVM_DEF_DIR)
 
@@ -97,18 +73,6 @@ def _kompass_prove_raw(opts: ProveRawOpts) -> None:
         print(f'{summary}')
 
 
-def _kompass_show(opts: ShowOpts) -> None:
-    kompass = Kompass(HASKELL_DEF_DIR, LLVM_LIB_DIR)
-    proof = APRProof.read_proof_data(opts.proof_dir, opts.id)
-    printer = PrettyPrinter(kompass.definition)
-    omit_labels = ('<currentBody>',) if opts.omit_current_body else ()
-    cterm_show = CTermShow(printer.print, omit_labels=omit_labels)
-    node_printer = KompassAPRNodePrinter(cterm_show, proof, opts)
-    shower = APRProofShow(kompass.definition, node_printer=node_printer)
-    lines = shower.show(proof)
-    print('\n'.join(lines))
-
-
 def _kompass_view(opts: ViewOpts) -> None:
     kompass = Kompass(HASKELL_DEF_DIR, LLVM_LIB_DIR)
     proof = APRProof.read_proof_data(opts.proof_dir, opts.id)
@@ -119,6 +83,18 @@ def _kompass_view(opts: ViewOpts) -> None:
     node_printer = KompassAPRNodePrinter(cterm_show, proof, opts)
     viewer = APRProofViewer(proof, kompass, node_printer=node_printer, cterm_show=cterm_show)
     viewer.run()
+
+
+def _kompass_show(opts: ShowOpts) -> None:
+    kompass = Kompass(HASKELL_DEF_DIR, LLVM_LIB_DIR)
+    proof = APRProof.read_proof_data(opts.proof_dir, opts.id)
+    printer = PrettyPrinter(kompass.definition)
+    omit_labels = ('<currentBody>',) if opts.omit_current_body else ()
+    cterm_show = CTermShow(printer.print, omit_labels=omit_labels)
+    node_printer = KompassAPRNodePrinter(cterm_show, proof, opts)
+    shower = APRProofShow(kompass.definition, node_printer=node_printer)
+    lines = shower.show(proof)
+    print('\n'.join(lines))
 
 
 def _kompass_prune(opts: PruneOpts) -> None:
@@ -142,6 +118,30 @@ def _run_build(args: Sequence[str]) -> None:
     os.environ['RUSTC'] = str(stable_mir_script)
 
     os.execvpe('cargo', ['cargo', 'build', *args], os.environ)
+
+
+def kompass(args: Sequence[str]) -> None:
+    parser = _arg_parser()
+    parser.prog = 'kompass'
+    ns, remaining = parser.parse_known_args(args)
+    logging.basicConfig(level=_loglevel(ns), format=_LOG_FORMAT)
+
+    opts = _parse_args(ns)
+    match opts:
+        case RunOpts():
+            _kompass_run(opts)
+        case ProveRawOpts():
+            _kompass_prove_raw(opts)
+        case ViewOpts():
+            _kompass_view(opts)
+        case ShowOpts():
+            _kompass_show(opts)
+        case PruneOpts():
+            _kompass_prune(opts)
+        case ProveRSOpts():
+            _kompass_prove_rs(opts)
+        case _:
+            raise AssertionError
 
 
 def _loglevel(args: Namespace) -> int:
