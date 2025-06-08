@@ -1,15 +1,19 @@
 from __future__ import annotations
 
 import logging
-import os
 import sys
+from argparse import ArgumentParser
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from kmir.__main__ import _arg_parser, _parse_args
+from kmir.__main__ import _arg_parser as kmir_arg_parser
+from kmir.__main__ import _parse_args as kmir_parse_args
 from kmir.cargo import CargoProject
-from kmir.options import ProveRawOpts, ProveRSOpts, PruneOpts, RunOpts, ShowOpts, ViewOpts
+from kmir.linker import link as kmir_link
+from kmir.options import KMirOpts, ProveRawOpts, ProveRSOpts, PruneOpts, RunOpts, ShowOpts, ViewOpts
 from kmir.smir import SMIRInfo
+from pyk.cli.args import KCLIArgs
 from pyk.cterm.show import CTermShow
 from pyk.kast.pretty import PrettyPrinter
 from pyk.proof.reachability import APRProof, APRProver
@@ -104,30 +108,68 @@ def _kompass_prune(opts: PruneOpts) -> None:
     proof.write_proof_data()
 
 
-def _run_build(args: Sequence[str]) -> None:
-    stable_mir_path = Path.home() / '.stable-mir-json'
-    if not stable_mir_path.is_dir():
-        raise FileNotFoundError(f"Stable MIR doesn't appear to be installed. Tried {stable_mir_path}")
+# TODO this needs to find a better home
+@dataclass
+class BuildOpts(KMirOpts):
+    project_dir: Path
+    do_clean: bool
 
-    scripts = list(stable_mir_path.glob('*.sh'))
+    def __init___(self, project_dir: Path | str, do_clean: bool = False) -> None:
+        self.project_dir = project_dir if isinstance(project_dir, Path) else Path(project_dir)
+        self.do_clean = do_clean
 
-    if len(scripts) == 0:
-        raise FileNotFoundError(f"Couldn't find a stable-mir-json script in the install folder: {stable_mir_path}")
 
-    stable_mir_script = scripts[0]
-    os.environ['RUSTC'] = str(stable_mir_script)
+def kompass_parser() -> ArgumentParser:
+    parser = ArgumentParser(prog='kompass')
 
-    os.execvpe('cargo', ['cargo', 'build', *args], os.environ)
+    command_parser = parser.add_subparsers(dest='command', required=True)
+    kcli_args = KCLIArgs()
+
+    build_parser = command_parser.add_parser(
+        'build', help='build Stable MIR JSON for a cargo project', parents=[kcli_args.logging_args]
+    )
+    build_parser.add_argument(
+        '--project-dir', '-C', metavar='DIR', help='Change to given directory before doing anything'
+    )
+    build_parser.add_argument('--rebuild', action='store_true', help='Run cargo clean before building')
+
+    return parser
+
+
+def _run_build(opts: BuildOpts) -> None:
+    cargo = CargoProject(opts.project_dir)
+
+    _LOGGER.info('Rebuilding project with Cargo')
+    smirs = cargo.smir_files_for_project(opts.do_clean)
+    linked = kmir_link([SMIRInfo.from_file(f) for f in smirs])
+
+    target = smirs[0].parent / 'linked.smir.json'
+    linked.dump(target)
 
 
 def kompass(args: Sequence[str]) -> None:
-    parser = _arg_parser()
-    parser.prog = 'kompass'
-    ns, remaining = parser.parse_known_args(args)
-    logging.basicConfig(level=_loglevel(ns), format=_LOG_FORMAT)
-
-    opts = _parse_args(ns)
+    if len(args) == 0:
+        # How to get both help messages?
+        kompass_parser().print_help()
+        kmir = kmir_arg_parser()
+        kmir.prog = 'kompass'
+        kmir.print_help()
+        exit(1)
+    opts: KMirOpts
+    match args[0]:
+        case 'build':
+            ns = kompass_parser().parse_args(args)
+            logging.basicConfig(level=_loglevel(ns), format=_LOG_FORMAT)
+            opts = BuildOpts(ns.project_dir, ns.rebuild)
+        case _:
+            parser = kmir_arg_parser()
+            parser.prog = 'kompass'
+            ns, remaining = parser.parse_known_args(args)
+            logging.basicConfig(level=_loglevel(ns), format=_LOG_FORMAT)
+            opts = kmir_parse_args(ns)
     match opts:
+        case BuildOpts():
+            _run_build(opts)
         case RunOpts():
             _kompass_run(opts)
         case ProveRawOpts():
