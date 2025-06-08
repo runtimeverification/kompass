@@ -465,7 +465,7 @@ wheels = [
 
 [[package]]
 name = "kframework"
-version = "7.1.259"
+version = "7.1.265"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "coloredlogs" },
@@ -481,15 +481,15 @@ dependencies = [
     { name = "tomli" },
     { name = "xdg-base-dirs" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b6/14/1311a386f905beb5d526416802efa24c234b487d0bc77c1df64146471ca6/kframework-7.1.259.tar.gz", hash = "sha256:5ab5362909c4773cf612240e8b60508e43a474f98557ed77b2a4bb1209a912fb", size = 242310, upload-time = "2025-05-22T14:01:55.836Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a0/01/b4d25972d766a501ef21d28ea2dafe4e656923cb1abe4f9bb106a9729027/kframework-7.1.265.tar.gz", hash = "sha256:01ed4d49db112a3bddd86e76e46b4c014adf1a57f1118e3bb2604aa77468b524", size = 242745, upload-time = "2025-06-04T07:49:21.06Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/58/30/461960dc0d886a1c6351f5516ac36a0d89109da5625228b00b0856387f40/kframework-7.1.259-py3-none-any.whl", hash = "sha256:52d7a0f2fd57eff7309b0d8d5a1d0303962c899cbe950248692ddbd5aace97e9", size = 293400, upload-time = "2025-05-22T14:01:53.866Z" },
+    { url = "https://files.pythonhosted.org/packages/62/5b/0eb21ce7cd07f40e802deb718c7a32e94cf1e83b9ec30e7fcfb665bdb345/kframework-7.1.265-py3-none-any.whl", hash = "sha256:29559f3d6da82d44ef495e0922a3f7a9d301450429c13cc6a5a2e04fd3786391", size = 293840, upload-time = "2025-06-04T07:49:19.467Z" },
 ]
 
 [[package]]
 name = "kmir"
 version = "0.3.181"
-source = { git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=8cae56fb578d96d0ef611663c66a614ddca9ff8b#8cae56fb578d96d0ef611663c66a614ddca9ff8b" }
+source = { git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&branch=smir-linker-python#aa019d46e7f74e6316a412fe24039240b6963373" }
 dependencies = [
     { name = "kframework" },
 ]
@@ -522,7 +522,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "kmir", git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=8cae56fb578d96d0ef611663c66a614ddca9ff8b" }]
+requires-dist = [{ name = "kmir", git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&branch=smir-linker-python" }]
 
 [package.metadata.requires-dev]
 dev = [
