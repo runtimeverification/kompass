@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING
 from kmir.__main__ import _arg_parser as kmir_arg_parser
 from kmir.__main__ import _parse_args as kmir_parse_args
 from kmir.cargo import CargoProject
-from kmir.linker import link as kmir_link
 from kmir.options import KMirOpts, ProveRawOpts, ProveRSOpts, PruneOpts, RunOpts, ShowOpts, ViewOpts
 from kmir.smir import SMIRInfo
 from pyk.cli.args import KCLIArgs
@@ -35,15 +34,12 @@ _LOG_FORMAT: Final = '%(levelname)s %(asctime)s %(name)s - %(message)s'
 def _kompass_run(opts: RunOpts) -> None:
     kompass = Kompass(HASKELL_DEF_DIR) if opts.haskell_backend else Kompass(LLVM_DEF_DIR)
 
-    smir_file: Path
     if opts.file:
-        smir_file = Path(opts.file)
+        smir_info = SMIRInfo.from_file(Path(opts.file))
     else:
         cargo = CargoProject(Path.cwd())
-        target = opts.bin if opts.bin else cargo.default_target
-        smir_file = cargo.smir_for(target)
-
-    smir_info = SMIRInfo.from_file(smir_file)
+        # target = opts.bin if opts.bin else cargo.default_target
+        smir_info = cargo.smir_for_project(clean=False)
 
     result = kompass.run_smir(smir_info, start_symbol=opts.start_symbol, depth=opts.depth)
     print(kompass.kore_to_pretty(result))
@@ -140,11 +136,7 @@ def _run_build(opts: BuildOpts) -> None:
     cargo = CargoProject(opts.project_dir)
 
     _LOGGER.info('Rebuilding project with Cargo')
-    smirs = cargo.smir_files_for_project(opts.do_clean)
-    linked = kmir_link([SMIRInfo.from_file(f) for f in smirs])
-
-    target = smirs[0].parent / 'linked.smir.json'
-    linked.dump(target)
+    _ = cargo.smir_for_project(opts.do_clean)
 
 
 def kompass(args: Sequence[str]) -> None:
@@ -157,16 +149,21 @@ def kompass(args: Sequence[str]) -> None:
         exit(1)
     opts: KMirOpts
     match args[0]:
-        case 'build':
-            ns = kompass_parser().parse_args(args)
-            logging.basicConfig(level=_loglevel(ns), format=_LOG_FORMAT)
-            opts = BuildOpts(ns.project_dir, ns.rebuild)
-        case _:
+        # handle specific commands using the kmir parser
+        case 'run' | 'prove' | 'show' | 'view' | 'prune' | 'prove-rs':
             parser = kmir_arg_parser()
             parser.prog = 'kompass'
             ns, remaining = parser.parse_known_args(args)
             logging.basicConfig(level=_loglevel(ns), format=_LOG_FORMAT)
             opts = kmir_parse_args(ns)
+        case _:
+            ns = kompass_parser().parse_args(args)
+            logging.basicConfig(level=_loglevel(ns), format=_LOG_FORMAT)
+            match ns.command:
+                case 'build':
+                    opts = BuildOpts(ns.project_dir, ns.rebuild)
+                case other:
+                    raise AssertionError(f'Parser returned command {other}')  # should have been caught
     match opts:
         case BuildOpts():
             _run_build(opts)
