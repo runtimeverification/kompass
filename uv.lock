@@ -489,7 +489,7 @@ wheels = [
 [[package]]
 name = "kmir"
 version = "0.3.181"
-source = { git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&branch=smir-linker-python#5174401e7d4a91ca49cd0298150130b81dd6c990" }
+source = { git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&branch=smir-linker-python#334cb971a52b94a28ceda1053f048115362df069" }
 dependencies = [
     { name = "kframework" },
 ]
