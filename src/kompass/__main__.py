@@ -115,21 +115,20 @@ def _run_prove(opts: ProveOpts) -> None:
 
     cargo = CargoProject(opts.project_dir)
 
-    target_dir = cargo.metadata['target_directory']
-    smir = Path(target_dir) / 'debug' / 'linked.smir.json'
+    target_dir = Path(cargo.metadata['target_directory'])
+    smir = target_dir / 'debug' / 'linked.smir.json'
 
-    # check that file exists, or rebuild if requested
+    # check that file exists, rebuild if reload requested
     if opts.reload:
         _ = cargo.smir_for_project(clean=True)
     else:
-        # load linked smir, fail if it does not exist
-        _ = SMIRInfo.from_file(smir)
+        assert smir.exists(), f'File {smir} does not exist, please rebuild'
 
     kompass = Kompass(HASKELL_DEF_DIR, LLVM_LIB_DIR, bug_report=opts.bug_report)
 
     prove_rs_opts = ProveRSOpts(
         rs_file=smir,
-        proof_dir=opts.proof_dir,
+        proof_dir=opts.proof_dir if opts.proof_dir is not None else target_dir / 'proofs',
         bug_report=opts.bug_report,
         max_depth=opts.max_depth,
         max_iterations=opts.max_iterations,
