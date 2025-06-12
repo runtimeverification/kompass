@@ -68,6 +68,8 @@ jobs:
     needs: code-quality-checks
     name: 'Integration Tests'
     runs-on: [self-hosted, linux, normal]
+    env:
+      - USER: kmir
     steps:
       - name: 'Check out code'
         uses: actions/checkout@v4
@@ -78,10 +80,11 @@ jobs:
         uses: ./.github/actions/with-docker
         with:
           container-name: kompass-ci-${{ github.sha }}
+          container-user: kmir
       - name: 'Build Kompass'
-        run: docker exec --user github-user kompass-ci-${GITHUB_SHA} make build
+        run: docker exec --user ${USER} kompass-ci-${GITHUB_SHA} make build
       - name: 'Run integration tests'
-        run: docker exec --user github-user kompass-ci-${GITHUB_SHA} make test-integration
+        run: docker exec --user ${USER} kompass-ci-${GITHUB_SHA} make test-integration
       - name: 'Tear down Docker'
         if: always()
         run: docker stop --time 0 kompass-ci-${GITHUB_SHA}

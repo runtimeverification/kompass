@@ -15,13 +15,14 @@ runs:
     shell: bash {0}
     env:
       CONTAINER_NAME: ${{ inputs.container-name }}
+      USER: ${{ inputs.container-user }}
     run: |
       set -euxo pipefail
 
       TAG=runtimeverificationinc/${CONTAINER_NAME}
       KMIR_VERSION=$(uv tree | grep kmir | sed -e "s/.*kmir  *v\([0-9.]*\)$/\1/")
 
-      USER=github-user
+      USER=${USER}
       GROUP=${USER}
       USER_ID=1000
       GROUP_ID=${USER_ID}
