@@ -69,7 +69,7 @@ jobs:
     name: 'Integration Tests'
     runs-on: [self-hosted, linux, normal]
     env:
-      - USER: kmir
+      USER: kmir
     steps:
       - name: 'Check out code'
         uses: actions/checkout@v4
