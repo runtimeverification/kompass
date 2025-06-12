@@ -49,7 +49,7 @@ def test_multi_crate_exec(main_crate: Path, update_expected_output: bool) -> Non
         # compare or update output
         with open(tmp, 'r') as f:
             actual = f.read()
-            actual = '\n'.join([line for line in actual.split() if not 'span:' in line])
+            actual = '\n'.join([line for line in actual.splitlines() if not 'span:' in line])
         assert_or_update_show_output(
             actual,
             expectation,

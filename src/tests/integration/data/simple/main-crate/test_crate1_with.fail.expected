@@ -1,7 +1,6 @@
 
 ┌─ 1 (root, init)
 │   #execTerminator ( terminator ( ... kind: terminatorKindCall ( ... func: operandC
-│   span: 0
 │
 │  (151 steps)
 ├─ 3 (split)
@@ -53,7 +52,6 @@
    ┃  ├─ 10
    ┃  │   #traverseProjection ( toLocal ( 1 ) , typedValue ( Aggregate ( variantIdx ( 1 )
    ┃  │   function: std::option::Option::<isize>::unwrap_or
-   ┃  │   span: 21
    ┃  ┃
    ┃  ┃ (1 step)
    ┃  ┣━━┓
@@ -61,14 +59,12 @@
    ┃  ┃  └─ 12 (leaf, pending)
    ┃  ┃      #traverseProjection ( toLocal ( 1 ) , project:TypedLocal ( ENUM_ARGS2:List [ 0 ]
    ┃  ┃      function: std::option::Option::<isize>::unwrap_or
-   ┃  ┃      span: 21
    ┃  ┃
    ┃  ┗━━┓
    ┃     │
    ┃     └─ 13 (leaf, pending)
    ┃         #traverseProjection ( toLocal ( 1 ) , typedValue ( Aggregate ( variantIdx ( 1 )
    ┃         function: std::option::Option::<isize>::unwrap_or
-   ┃         span: 21
    ┃
    ┗━━┓ subst: .Subst
       ┃ constraint:
