@@ -112,7 +112,7 @@ def _run_build(opts: BuildOpts) -> None:
     _ = cargo.smir_for_project(opts.do_clean)
 
 
-def _run_prove(opts: ProveOpts) -> None:
+def _run_prove(opts: ProveOpts) -> bool:
     cargo = CargoProject(opts.project_dir)
     target_dir = Path(cargo.metadata['target_directory'])
     smir = target_dir / 'debug' / 'linked.smir.json'
@@ -140,8 +140,7 @@ def _run_prove(opts: ProveOpts) -> None:
     )
     proof = kompass.prove_rs(prove_rs_opts)
     print(str(proof.summary))
-    if not proof.passed:
-        sys.exit(1)
+    return proof.passed
 
 
 def _run_view(opts: ViewOpts) -> None:
@@ -207,7 +206,9 @@ def kompass(args: Sequence[str]) -> None:
         case BuildOpts():
             _run_build(opts)
         case ProveOpts():
-            _run_prove(opts)
+            passed = _run_prove(opts)
+            if not passed:
+                sys.exit(1)
         case ViewOpts():
             _run_view(opts)
         case ShowOpts():
