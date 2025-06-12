@@ -26,11 +26,11 @@ def test_multi_crate_exec(main_crate: Path, update_expected_output: bool) -> Non
     main._run_build(build_opts)
 
     for expectation in main_crate.glob('*.expected'):
-        sym = expectation.name.rstrip('.expected')
+        sym = expectation.name.removesuffix('.expected')
 
         if sym.endswith('.fail'):
             expect = False
-            start = sym.rstrip('.fail')
+            start = sym.removesuffix('.fail')
         else:
             expect = True
             start = sym
