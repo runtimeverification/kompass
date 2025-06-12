@@ -84,7 +84,10 @@ jobs:
       - name: 'Build Kompass'
         run: docker exec --user ${USER} kompass-ci-${GITHUB_SHA} make build
       - name: 'Run integration tests'
-        run: docker exec --user ${USER} kompass-ci-${GITHUB_SHA} make test-integration
+        run: |
+          docker exec --user ${USER} kompass-ci-${GITHUB_SHA} which stable-mir-json
+          docker exec --user ${USER} kompass-ci-${GITHUB_SHA} stable-mir-json --version
+          docker exec --user ${USER} kompass-ci-${GITHUB_SHA} make test-integration
       - name: 'Tear down Docker'
         if: always()
         run: docker stop --time 0 kompass-ci-${GITHUB_SHA}
