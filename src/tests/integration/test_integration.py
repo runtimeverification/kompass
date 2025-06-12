@@ -48,9 +48,9 @@ def test_multi_crate_exec(main_crate: Path, update_expected_output: bool) -> Non
 
         # compare or update output
         with open(tmp, 'r') as f:
-            result = f.read()
+            actual = f.read()
         assert_or_update_show_output(
-            result,
+            actual,
             expectation,
             update=update_expected_output,
         )
