@@ -136,6 +136,9 @@ def kompass_parser() -> ArgumentParser:
         'show', help='Show a saved proof', parents=[kcli_args.logging_args, project_parser, proof_args, display_args]
     )
 
+    # only for sake of the help message:
+    command_parser.add_parser('kmir', help='Run commands of the underlying `mir-semantics` CLI')
+
     return parser
 
 

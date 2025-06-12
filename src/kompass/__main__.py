@@ -188,7 +188,7 @@ def kompass(args: Sequence[str]) -> None:
         case 'kmir':
             _LOGGER.warning(f'INFO {args[1]} command handled by kmir parser.\n')
             parser = kmir_arg_parser()
-            parser.prog = 'kompass'
+            parser.prog = 'kompass kmir'
             ns, remaining = parser.parse_known_args(args[1:])
             logging.basicConfig(level=_loglevel(ns), format=_LOG_FORMAT)
             opts = kmir_parse_args(ns)
