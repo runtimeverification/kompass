@@ -38,7 +38,6 @@ def _kompass_run(opts: RunOpts) -> None:
         smir_info = SMIRInfo.from_file(Path(opts.file))
     else:
         cargo = CargoProject(Path.cwd())
-        # target = opts.bin if opts.bin else cargo.default_target
         smir_info = cargo.smir_for_project(clean=False)
 
     result = kompass.run_smir(smir_info, start_symbol=opts.start_symbol, depth=opts.depth)
