@@ -16,7 +16,7 @@ name = "Runtime Verification, Inc."
 email = "contact@runtimeverification.com"
 
 [tool.uv.sources]
-kmir = { git = "https://github.com/runtimeverification/mir-semantics.git", subdirectory = "kmir", branch = "smir-linker-python" }
+kmir = { git = "https://github.com/runtimeverification/mir-semantics", subdirectory = "kmir", tag = "v0.4.3" }
 
 [project.scripts]
 kompass = "kompass.__main__:main"
