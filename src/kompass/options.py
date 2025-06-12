@@ -79,7 +79,22 @@ class ViewOpts(ProofDisplayOpts): ...
 
 
 @dataclass
-class ShowOpts(ProofDisplayOpts): ...
+class ShowOpts(ProofDisplayOpts):
+    output: Path | None
+
+    def __init__(
+        self,
+        project_dir: Path,
+        proof_dir: Path | None,
+        id: str,
+        output: Path | None = None,
+        full_display: bool = False,
+    ) -> None:
+        self.project_dir = project_dir
+        self.proof_dir = proof_dir.resolve() if proof_dir is not None else None
+        self.id = id
+        self.full_display = full_display
+        self.output = output.resolve() if output is not None else None
 
 
 def kompass_parser() -> ArgumentParser:
@@ -132,9 +147,10 @@ def kompass_parser() -> ArgumentParser:
     command_parser.add_parser(
         'view', help='View a saved proof', parents=[kcli_args.logging_args, project_parser, proof_args, display_args]
     )
-    command_parser.add_parser(
+    show_parser = command_parser.add_parser(
         'show', help='Show a saved proof', parents=[kcli_args.logging_args, project_parser, proof_args, display_args]
     )
+    show_parser.add_argument('--output', '-o', metavar='PATH', help='Redirect output to PATH')
 
     # only for sake of the help message:
     command_parser.add_parser('kmir', help='Run commands of the underlying `mir-semantics` CLI')
@@ -174,6 +190,7 @@ def mk_kompass_opts(ns: Namespace) -> KMirOpts:
                 project_dir,
                 proof_dir,
                 ns.id,
+                Path(ns.output) if ns.output is not None else None,
                 ns.full_display,
             )
         case other:

@@ -85,7 +85,7 @@ def _kompass_view(opts: KMirViewOpts) -> None:
     viewer.run()
 
 
-def _kompass_show(opts: KMirShowOpts) -> None:
+def _kompass_show(opts: KMirShowOpts) -> str:
     kompass = Kompass(HASKELL_DEF_DIR, LLVM_LIB_DIR)
     proof = APRProof.read_proof_data(opts.proof_dir, opts.id)
     printer = PrettyPrinter(kompass.definition)
@@ -94,7 +94,7 @@ def _kompass_show(opts: KMirShowOpts) -> None:
     node_printer = KompassAPRNodePrinter(cterm_show, proof, opts)
     shower = APRProofShow(kompass.definition, node_printer=node_printer)
     lines = shower.show(proof)
-    print('\n'.join(lines))
+    return '\n'.join(lines)  # output redirection in caller
 
 
 def _kompass_prune(opts: PruneOpts) -> None:
@@ -171,7 +171,14 @@ def _run_show(opts: ShowOpts) -> None:
         smir_info=target_dir / 'debug' / 'linked.smir.json',
         omit_current_body=True,
     )
-    _kompass_show(kmir_show_opts)
+    output = _kompass_show(kmir_show_opts)
+    # redirection to file implemented here
+    if opts.output is None:
+        print(output)
+    else:
+        # write to file output
+        with open(opts.output, 'w', encoding='utf-8') as f:
+            f.write(output)
 
 
 def kompass(args: Sequence[str]) -> None:
