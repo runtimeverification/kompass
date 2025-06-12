@@ -4,6 +4,9 @@ inputs:
   container-name:
     description: 'Docker container name to use'
     required: true
+  container-user:
+    description: 'User name to use in the docker container'
+    default: kmir
 runs:
   using: 'composite'
   steps:
