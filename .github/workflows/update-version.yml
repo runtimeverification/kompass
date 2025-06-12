@@ -27,7 +27,7 @@ jobs:
       - name: 'Update kmir release tag'
         run: |
           KMIR_VERSION=$(cat ./deps/kmir_release)
-          sed -i 's!^\(kmir =[^,]*\), rev = [^,]\+, \(.*\)!\1, rev = "'${KMIR_VERSION}'", \2!' pyproject.toml
+          sed -i 's!kmir = { git = "https://github.com/runtimeverification/mir-semantics.git", rev = "v0.4.3", subdirectory = "kmir" }!kmir = { git = "https://github.com/runtimeverification/mir-semantics.git", rev = "v'${KMIR_VERSION}'", subdirectory = "kmir" }!' pyproject.toml
           uv lock --upgrade
           git add pyproject.toml uv.lock
           git commit -m '{pyproject.toml,uv.lock}: sync uv files, KMIR version '${KMIR_VERSION} || true
