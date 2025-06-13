@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 import logging
-import os
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from kmir.__main__ import _arg_parser, _parse_args
+from kmir.__main__ import _arg_parser as kmir_arg_parser
+from kmir.__main__ import _parse_args as kmir_parse_args
 from kmir.cargo import CargoProject
-from kmir.options import ProveRawOpts, ProveRSOpts, PruneOpts, RunOpts, ShowOpts, ViewOpts
+from kmir.options import KMirOpts, ProveRawOpts, ProveRSOpts, PruneOpts, RunOpts
+from kmir.options import ShowOpts as KMirShowOpts
+from kmir.options import ViewOpts as KMirViewOpts
 from kmir.smir import SMIRInfo
 from pyk.cterm.show import CTermShow
 from pyk.kast.pretty import PrettyPrinter
@@ -16,7 +18,8 @@ from pyk.proof.reachability import APRProof, APRProver
 from pyk.proof.show import APRProofShow
 from pyk.proof.tui import APRProofViewer
 
-from kompass.kompass import HASKELL_DEF_DIR, LLVM_DEF_DIR, LLVM_LIB_DIR, Kompass, KompassAPRNodePrinter
+from .kompass import HASKELL_DEF_DIR, LLVM_DEF_DIR, LLVM_LIB_DIR, Kompass, KompassAPRNodePrinter
+from .options import BuildOpts, ProveOpts, ShowOpts, ViewOpts, kompass_parser, mk_kompass_opts
 
 if TYPE_CHECKING:
     from argparse import Namespace
@@ -69,7 +72,7 @@ def _kompass_prove_raw(opts: ProveRawOpts) -> None:
         print(f'{summary}')
 
 
-def _kompass_view(opts: ViewOpts) -> None:
+def _kompass_view(opts: KMirViewOpts) -> None:
     kompass = Kompass(HASKELL_DEF_DIR, LLVM_LIB_DIR)
     proof = APRProof.read_proof_data(opts.proof_dir, opts.id)
     printer = PrettyPrinter(kompass.definition)
@@ -81,7 +84,7 @@ def _kompass_view(opts: ViewOpts) -> None:
     viewer.run()
 
 
-def _kompass_show(opts: ShowOpts) -> None:
+def _kompass_show(opts: KMirShowOpts) -> str:
     kompass = Kompass(HASKELL_DEF_DIR, LLVM_LIB_DIR)
     proof = APRProof.read_proof_data(opts.proof_dir, opts.id)
     printer = PrettyPrinter(kompass.definition)
@@ -90,7 +93,7 @@ def _kompass_show(opts: ShowOpts) -> None:
     node_printer = KompassAPRNodePrinter(cterm_show, proof, opts)
     shower = APRProofShow(kompass.definition, node_printer=node_printer)
     lines = shower.show(proof)
-    print('\n'.join(lines))
+    return '\n'.join(lines)  # output redirection in caller
 
 
 def _kompass_prune(opts: PruneOpts) -> None:
@@ -100,37 +103,123 @@ def _kompass_prune(opts: PruneOpts) -> None:
     proof.write_proof_data()
 
 
-def _run_build(args: Sequence[str]) -> None:
-    stable_mir_path = Path.home() / '.stable-mir-json'
-    if not stable_mir_path.is_dir():
-        raise FileNotFoundError(f"Stable MIR doesn't appear to be installed. Tried {stable_mir_path}")
+def _run_build(opts: BuildOpts) -> None:
+    assert isinstance(opts.project_dir, Path)
+    cargo = CargoProject(opts.project_dir)
 
-    scripts = list(stable_mir_path.glob('*.sh'))
+    _LOGGER.info('Rebuilding project with Cargo')
+    _ = cargo.smir_for_project(opts.do_clean)
 
-    if len(scripts) == 0:
-        raise FileNotFoundError(f"Couldn't find a stable-mir-json script in the install folder: {stable_mir_path}")
 
-    stable_mir_script = scripts[0]
-    os.environ['RUSTC'] = str(stable_mir_script)
+def _run_prove(opts: ProveOpts) -> bool:
+    cargo = CargoProject(opts.project_dir)
+    target_dir = Path(cargo.metadata['target_directory'])
+    smir = target_dir / 'debug' / 'linked.smir.json'
 
-    os.execvpe('cargo', ['cargo', 'build', *args], os.environ)
+    _LOGGER.debug(f'Running proof for {opts.start_symbol} using file {smir}')
+
+    # check that file exists, rebuild if reload requested
+    if opts.reload:
+        _ = cargo.smir_for_project(clean=True)
+    else:
+        assert smir.exists(), f'File {smir} does not exist, please rebuild'
+
+    kompass = Kompass(HASKELL_DEF_DIR, LLVM_LIB_DIR, bug_report=opts.bug_report)
+
+    prove_rs_opts = ProveRSOpts(
+        rs_file=smir,
+        proof_dir=opts.proof_dir if opts.proof_dir is not None else target_dir / 'proofs',
+        bug_report=opts.bug_report,
+        max_depth=opts.max_depth,
+        max_iterations=opts.max_iterations,
+        reload=opts.reload,
+        save_smir=False,
+        smir=True,
+        start_symbol=opts.start_symbol,
+    )
+    proof = kompass.prove_rs(prove_rs_opts)
+    print(str(proof.summary))
+    return proof.passed
+
+
+def _run_view(opts: ViewOpts) -> None:
+    cargo = CargoProject(opts.project_dir)
+    target_dir = Path(cargo.metadata['target_directory'])
+    proof_dir = target_dir / 'proofs' if opts.proof_dir is None else opts.proof_dir
+
+    kmir_view_opts = KMirViewOpts(
+        proof_dir=proof_dir,
+        id=opts.id,
+        full_printer=opts.full_display,
+        smir_info=target_dir / 'debug' / 'linked.smir.json',
+        omit_current_body=True,
+    )
+    _kompass_view(kmir_view_opts)
+
+
+def _run_show(opts: ShowOpts) -> None:
+    cargo = CargoProject(opts.project_dir)
+    target_dir = Path(cargo.metadata['target_directory'])
+    proof_dir = target_dir / 'proofs' if opts.proof_dir is None else opts.proof_dir
+
+    kmir_show_opts = KMirShowOpts(
+        proof_dir=proof_dir,
+        id=opts.id,
+        full_printer=opts.full_display,
+        smir_info=target_dir / 'debug' / 'linked.smir.json',
+        omit_current_body=True,
+    )
+    output = _kompass_show(kmir_show_opts)
+    # redirection to file implemented here
+    if opts.output is None:
+        print(output)
+    else:
+        # write to file output
+        with open(opts.output, 'w', encoding='utf-8') as f:
+            f.write(output)
 
 
 def kompass(args: Sequence[str]) -> None:
-    parser = _arg_parser()
-    parser.prog = 'kompass'
-    ns, remaining = parser.parse_known_args(args)
-    logging.basicConfig(level=_loglevel(ns), format=_LOG_FORMAT)
-
-    opts = _parse_args(ns)
+    if len(args) == 0:
+        # How to get both help messages?
+        kompass_parser().print_help()
+        kmir = kmir_arg_parser()
+        kmir.prog = 'kompass'
+        kmir.print_help()
+        exit(1)
+    opts: KMirOpts
+    match args[0]:
+        # handle commands using the kmir parser when prefixed `kmir`
+        case 'kmir':
+            _LOGGER.warning(f'INFO {args[1]} command handled by kmir parser.\n')
+            parser = kmir_arg_parser()
+            parser.prog = 'kompass kmir'
+            ns, remaining = parser.parse_known_args(args[1:])
+            logging.basicConfig(level=_loglevel(ns), format=_LOG_FORMAT)
+            opts = kmir_parse_args(ns)
+        case _:
+            ns = kompass_parser().parse_args(args)
+            logging.basicConfig(level=_loglevel(ns), format=_LOG_FORMAT)
+            opts = mk_kompass_opts(ns)
     match opts:
+        case BuildOpts():
+            _run_build(opts)
+        case ProveOpts():
+            passed = _run_prove(opts)
+            if not passed:
+                sys.exit(1)
+        case ViewOpts():
+            _run_view(opts)
+        case ShowOpts():
+            _run_show(opts)
+        # ----- kmir functionality below
         case RunOpts():
             _kompass_run(opts)
         case ProveRawOpts():
             _kompass_prove_raw(opts)
-        case ViewOpts():
+        case KMirViewOpts():
             _kompass_view(opts)
-        case ShowOpts():
+        case KMirShowOpts():
             _kompass_show(opts)
         case PruneOpts():
             _kompass_prune(opts)
@@ -149,4 +238,5 @@ def _loglevel(args: Namespace) -> int:
 
 
 def main() -> None:
+    sys.setrecursionlimit(10000000)
     kompass(sys.argv[1:])

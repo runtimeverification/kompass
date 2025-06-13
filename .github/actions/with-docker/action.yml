@@ -4,6 +4,9 @@ inputs:
   container-name:
     description: 'Docker container name to use'
     required: true
+  container-user:
+    description: 'User name to use in the docker container'
+    default: kmir
 runs:
   using: 'composite'
   steps:
@@ -15,20 +18,21 @@ runs:
     shell: bash {0}
     env:
       CONTAINER_NAME: ${{ inputs.container-name }}
+      USER: ${{ inputs.container-user }}
     run: |
       set -euxo pipefail
 
       TAG=runtimeverificationinc/${CONTAINER_NAME}
-      K_COMMIT=$(uv tree | grep kframework | grep -Po '[0-9.]+')
+      KMIR_VERSION=$(uv tree | grep kmir | sed -e "s/.*kmir  *v\([0-9.]*\)$/\1/")
 
-      USER=github-user
+      USER=${USER}
       GROUP=${USER}
       USER_ID=1000
       GROUP_ID=${USER_ID}
 
       docker build . --tag ${TAG}           \
         --file .github/workflows/Dockerfile \
-        --build-arg K_COMMIT=${K_COMMIT}    \
+        --build-arg KMIR_VERSION=${KMIR_VERSION} \
         --build-arg USER=${USER}            \
         --build-arg GROUP=${GROUP}          \
         --build-arg USER_ID=${USER_ID}      \
@@ -41,7 +45,8 @@ runs:
         --tty                             \
         --detach                          \
         --workdir /home/${USER}/workspace \
-        ${TAG}
+        ${TAG}                            \
+        sleep 1200
 
       docker cp . ${CONTAINER_NAME}:/home/${USER}/workspace
       docker exec --user root ${CONTAINER_NAME} chown -R ${USER}:${GROUP} /home/${USER}/workspace
