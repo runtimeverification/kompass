@@ -17,3 +17,5 @@ RUN bash -c 'rustup default $(rustup toolchain list)' && \
     cd /home/kmir/.kompass && \
     ls -l && \
     make
+
+CMD ["kompass", "--help"]
