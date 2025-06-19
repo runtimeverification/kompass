@@ -1,7 +1,7 @@
 Using `kompass` to run proofs of Rust functions for Solana
 ----------------------------------------------------------
 
-The `kompass` tool provides a way to prove that a given function in a Rust program 
+The `kompass` tool provides a way to prove that a given function in a Rust program
 * does not exhibit undefined behaviour, and
 * runs to completion with any type-correct input.
 The execution flow of the function can be inspected as a control flow graph.
@@ -18,7 +18,7 @@ but we will publish the `kompass` docker image to docker hub in the near future.
 To build the docker image with a tag `kompass:local`, use the following command in a local checkout of `kompass`:
 
 ```shell
-/path/to/kompass$ docker build -t kompass:local .
+/path/to/kompass$ docker build -t kompass:local --build-arg KMIR_VERSION=$(cat deps/kmir_release) .
 ```
 
 
@@ -38,19 +38,19 @@ If docker is not available, one can set up the tool chain and its prerequisites 
     $ cd stable-mir-json
     $ cargo build --release && cargo run --bin cargo_stable_mir_json $PWD
     ```
-    This creates `$HOME/.stable-mir-json` into 
+    This creates `$HOME/.stable-mir-json` into
 * Install `K`, best done using using `kup`.
     ```shell
     $ bash <(curl https://kframework.org/install)
     $ kup install k
     ```
     This installs the latest version of `K` framework, including the `kompile` command as well as
-    the symbolic backend required for the proofs, and a number of other `K` tools.  
+    the symbolic backend required for the proofs, and a number of other `K` tools.
     The installation of `K` is `nix`-based, so `nix` will be installed unless it is already available.
 * Download and build `kompass`
 
     `kompass` requires an installation of `python3` (`>= 3.10`) and `uv` to build.
-    `python3` may already be present, or it can be installed using the package manger of your system.  
+    `python3` may already be present, or it can be installed using the package manger of your system.
     After checking that `python3` is available, install `uv` with:
     ```shell
     $ python3 --version
@@ -69,7 +69,7 @@ If docker is not available, one can set up the tool chain and its prerequisites 
 
     ```shell
     ...some/other/directory$ uv --project path/to/kompass run -- kompass --help
-    ```    
+    ```
     A shell alias can make this easier:
     ```shell
     $ cd path/to/kompass
@@ -95,7 +95,7 @@ The following code is a straightforward Rust executable for demonstration:
 ```shell
 .../small-test$ ls
 Cargo.lock  Cargo.toml  src  target
-.../small-test$ more src/main.rs 
+.../small-test$ more src/main.rs
 pub fn add(left: u64, right: u64) -> u64 {
     left + right
 }
@@ -127,15 +127,15 @@ INFO 2025-06-19 14:16:15,903 kmir.cargo -    Compiling small_test v0.1.0 (.../sm
 INFO 2025-06-19 14:16:15,904 kmir.cargo -     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.16s
 INFO 2025-06-19 14:16:15,905 kmir.linker - Maximum type ID (offset) is 100, linking 1 smir.json files
 ```
-This runs `cargo build` (in default debug mode) and creates a `linked.smir.json` file in the project's `target` directory.  
-Optionally, one can add `--rebuild` to run `cargo clean` before (**NOTE:** This will discard data from all proofs run before!).  
+This runs `cargo build` (in default debug mode) and creates a `linked.smir.json` file in the project's `target` directory.
+Optionally, one can add `--rebuild` to run `cargo clean` before (**NOTE:** This will discard data from all proofs run before!).
 The `--verbose` flag provides more information about what is happening behind the scenes.
 
 ## Running a given function with symbolic input with `kompass prove`
 
 To run a given function from the code in the `cargo` project, use
 ```shell
-.../small-test$ kompass prove 
+.../small-test$ kompass prove
 WARNING 2025-06-19 14:16:22,346 kmir.smir - Could not find sym in fun_syms: _ZN3std2rt10lang_start17h3877dc8469262e28E
 WARNING 2025-06-19 14:16:22,346 kmir.smir - Could not find sym in fun_syms: _ZN4core3ops8function6FnOnce40call_once$u7b$$u7b$vtable.shim$u7d$$u7d$17h2286ad0ee4e3ac0cE
 WARNING 2025-06-19 14:16:22,346 kmir.smir - Could not find sym in fun_syms: _ZN4core3ptr85drop_in_place$LT$std..rt..lang_start$LT$$LP$$RP$$GT$..$u7b$$u7b$closure$u7d$$u7d$$GT$17h5379b28d388f7714E
@@ -157,7 +157,7 @@ By default, the `main` function is executed, and it terminates successfully here
 
 Other functions can be executed using `--start-symbol`, and will use symbolic arguments if they take any.
 
-The following command executes the code of the Rust function named `twice` in module `a_module` with one symbolic arguments. 
+The following command executes the code of the Rust function named `twice` in module `a_module` with one symbolic arguments.
 Function names are prefixed with the respective module names where they reside, separated by double colons (`::`).
 
 ```shell
@@ -180,7 +180,7 @@ APRProof: linked.smir.a_module::twice
 Subproofs: 0
 ```
 
-This execution halts on a construct that caused undefined behaviour, leaving one node `stuck` and the proof fails.  
+This execution halts on a construct that caused undefined behaviour, leaving one node `stuck` and the proof fails.
 Typically, one would execute functions which test the behaviour of other code by applying assertions on the results to confirm desired properties (as code for fuzzing usually does) to check properties beyond undefined behaviour.
 
 Proof artifacts are stored in the project's `target` directory, under `proofs`.
