@@ -92,3 +92,43 @@ jobs:
       - name: 'Tear down Docker'
         if: always()
         run: docker stop --time 0 kompass-ci-${GITHUB_SHA}
+
+  build-kompass-image:
+    name: Build Kompass Image
+    needs: [ integration-tests ]
+    runs-on: ubuntu-latest
+    env:
+      container_name: "kompass-${{ github.run_id }}"
+    outputs:
+      image-name: ${{ steps.set-image-name.outputs.image-name }}
+      kompass-version: ${{ steps.set-image-name.outputs.kompass-version }}
+      kmir-version: ${{ steps.set-image-name.outputs.kmir-version }}
+      short-sha: ${{ steps.set-image-name.outputs.short-sha }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3.10.0
+
+      - name: Set Image Name Parameters
+        id: set-image-name
+        run: |
+          echo "image-name=ghcr.io/runtimeverification/kompass" >> $GITHUB_OUTPUT
+          echo "kmir-version=$(cat deps/kmir_release)" >> $GITHUB_OUTPUT
+          echo "kompass-version=$(cat package/version)" >> $GITHUB_OUTPUT
+          echo "short-sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Build Kmir Container
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          platforms: linux/amd64
+          push: false
+          load: true
+          build-args: |
+            KMIR_VERSION=${{ steps.set-image-name.outputs.kmir-version }}
+          tags: ${{ steps.set-image-name.outputs.image-name }}:ubuntu-jammy-${{ steps.set-image-name.outputs.kompass-version }}-${{ steps.set-image-name.outputs.short-sha }}

@@ -4,11 +4,11 @@ build-backend = "hatchling.build"
 
 [project]
 name = "kompass"
-version = "0.1.4"
+version = "0.1.5"
 description = "K Semantics for the Solana ecosystem"
 requires-python = "~=3.10"
 dependencies = [
-    "kmir",
+    "kmir@git+https://github.com/runtimeverification/mir-semantics.git@v0.4.4#subdirectory=kmir",
 ]
 
 [[project.authors]]
@@ -42,6 +42,9 @@ dev = [
     "pytest-xdist",
     "pyupgrade",
 ]
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.isort]
 profile = "black"
