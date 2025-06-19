@@ -116,7 +116,7 @@ jobs:
       - name: Set Image Name Parameters
         id: set-image-name
         run: |
-          echo "image-name=ghcr.io/runtimeverification/mir-semantics/kompass" >> $GITHUB_OUTPUT
+          echo "image-name=ghcr.io/runtimeverification/kompass" >> $GITHUB_OUTPUT
           echo "kmir-version=$(cat deps/kmir_release)" >> $GITHUB_OUTPUT
           echo "kompass-version=$(cat package/version)" >> $GITHUB_OUTPUT
           echo "short-sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
