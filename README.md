@@ -13,13 +13,15 @@
 
 ```bash
 make build
-pip install dist/*.whl
+pip install .
 ```
 
 ## Usage
 
 `kompass` operates inside a cargo project to build and run/prove the code in it and view proof artifacts.  
 For basic usage information, run `kompass --help` and inspect each command's available options with `kompass <command> --help`.
+
+See [`Usage.md`](./Usage.md) for more detailed instructions including a small example program.
 
 #### Prerequisites: 
 
