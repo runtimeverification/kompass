@@ -13,9 +13,8 @@ RUN chown -R kmir:kmir /home/kmir/.kompass
 
 USER kmir:kmir
 RUN bash -c 'rustup default $(rustup toolchain list)' && \
-    echo  "alias kompass='uv --project /home/kmir/.kompass run -- kompass'" >> /home/kmir/.bashrc && \
     cd /home/kmir/.kompass && \
-    ls -l && \
-    make
+    make && \
+    pip install .
 
 CMD ["kompass", "--help"]
