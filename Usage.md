@@ -83,7 +83,7 @@ If docker is not available, one can set up the tool chain and its prerequisites 
 * `K` and `nix` can be uninstalled by removing the multi-user `nix` installation, as [described in the `nix` manual](https://nix.dev/manual/nix/latest/installation/uninstall.html).
 * Uninstalling the `pip` and `uv` tools is not recommended. Please refer to their respective manuals for removal.
 * To uninstall `stable-mir-json`, simply delete it from the `$HOME`: `rm -rf $HOME/.stable-mir-json`
-* Removing `rustup` is not recommended. To uninstall `rustup`, run ``
+* Removing `rustup` is not recommended. To uninstall `rustup`, run `rustup self uninstall`
 
 # Using `kompass`
 
