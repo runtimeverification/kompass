@@ -411,16 +411,16 @@ wheels = [
 
 [[package]]
 name = "hypothesis"
-version = "6.135.14"
+version = "6.135.17"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "attrs" },
     { name = "exceptiongroup", marker = "python_full_version < '3.11'" },
     { name = "sortedcontainers" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/70/a5/d4f74ba61bbe5dd001c998ae8b85f9bfdc6cd29e6c5693d1116847b64251/hypothesis-6.135.14.tar.gz", hash = "sha256:2666df50b3cc40ea08b161a5389d6a1cd5aa3cab0dd8fde0ae339389714a4f67", size = 452884, upload-time = "2025-06-20T19:16:38.199Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/14/69/b5f457b0cc6f9cffcc91ad655d440d30803b3d3f11dcb0e24e53e67861a0/hypothesis-6.135.17.tar.gz", hash = "sha256:9dc0f2d8c9488cebca0ba7d02714c33a687c173782e97f9f5325ee2bf99e3b95", size = 452316, upload-time = "2025-06-30T02:43:08.02Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ce/cf/491a487229b04a2ad56175c74700cfb79635dfce2d942becc6ab10c0ceb9/hypothesis-6.135.14-py3-none-any.whl", hash = "sha256:0dd5b8095e36bd288367c631f864a16c30500b01b17943dcea681233f7421860", size = 519115, upload-time = "2025-06-20T19:16:34.539Z" },
+    { url = "https://files.pythonhosted.org/packages/37/3b/db293cb518104366d54613ca4113950124806d5a9a9cc5b18eb3072f14af/hypothesis-6.135.17-py3-none-any.whl", hash = "sha256:f906fe466ff571d7dd565e8af892004ee6d0fb3a9ef2b9a7ce52c11295ef6648", size = 518461, upload-time = "2025-06-30T02:43:04.201Z" },
 ]
 
 [[package]]
@@ -488,8 +488,8 @@ wheels = [
 
 [[package]]
 name = "kmir"
-version = "0.4.10"
-source = { git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=v0.4.10#d04f8423672f8b087192aed52358019f8525c4d8" }
+version = "0.4.11"
+source = { git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=v0.4.11#334782b603312a10d285aff7138e3dfc1db99ba8" }
 dependencies = [
     { name = "kframework" },
 ]
@@ -522,7 +522,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "kmir", git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=v0.4.10" }]
+requires-dist = [{ name = "kmir", git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=v0.4.11" }]
 
 [package.metadata.requires-dev]
 dev = [
