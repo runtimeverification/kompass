@@ -435,16 +435,16 @@ wheels = [
 
 [[package]]
 name = "hypothesis"
-version = "6.138.15"
+version = "6.138.16"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "attrs" },
     { name = "exceptiongroup", marker = "python_full_version < '3.11'" },
     { name = "sortedcontainers" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3b/68/adc338edec178cf6c08b4843ea2b2d639d47bed4b06ea9331433b71acc0a/hypothesis-6.138.15.tar.gz", hash = "sha256:6b0e1aa182eacde87110995a3543530d69ef411f642162a656efcd46c2823ad1", size = 466116, upload-time = "2025-09-08T05:34:15.956Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/21/2f/3f41181a7054f8049c0c2ef2eb8a86f43c2bfb0da7b0aba69c24019f56eb/hypothesis-6.138.16.tar.gz", hash = "sha256:08f9015dadc877ce5ca04752efc56df797238148a44d1c69db656ed29bfbbf73", size = 466040, upload-time = "2025-09-13T23:26:07.448Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/39/49/911eb0cd17884a7a6f510e78acf0a70592e414d194695a0c7c1db91645b2/hypothesis-6.138.15-py3-none-any.whl", hash = "sha256:b7cf743d461c319eb251a13c8e1dcf00f4ef7085e4ab5bf5abf102b2a5ffd694", size = 533621, upload-time = "2025-09-08T05:34:12.272Z" },
+    { url = "https://files.pythonhosted.org/packages/ac/f3/6aa509411e72828ad1c6ed107e9efe7b3e1464e8ef620bb39338954bff58/hypothesis-6.138.16-py3-none-any.whl", hash = "sha256:63dde4b45a04caef2a59ccae5541083cbadfe7605435e7a23454fe7c2113577c", size = 533690, upload-time = "2025-09-13T23:26:03.93Z" },
 ]
 
 [[package]]
@@ -488,7 +488,7 @@ wheels = [
 
 [[package]]
 name = "kframework"
-version = "7.1.280"
+version = "7.1.286"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "coloredlogs" },
@@ -505,15 +505,15 @@ dependencies = [
     { name = "tomli" },
     { name = "xdg-base-dirs" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c8/3e/a423fdd28bc61b36bd74664fb0e1156c3a9e4dc07c586e6fc1d53207ac74/kframework-7.1.280.tar.gz", hash = "sha256:e63098c7eb24c936ba2ed57c9184866e0316767f898148f91a0691e341f1ab3a", size = 242915, upload-time = "2025-07-18T11:30:10.824Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c9/3c/3dae901a12ce9592d081dde923d01aa695ec841be0002566fe24afb4db97/kframework-7.1.286.tar.gz", hash = "sha256:765bfec5c17f2ca83fa31dec766bb352463a5891466007452ddc27863c3e4710", size = 242935, upload-time = "2025-09-13T03:45:10.057Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1e/dd/2d028826c92adf60d69a1ad9ee821c80cf0c6ea5f46f38aa667f5033b2b8/kframework-7.1.280-py3-none-any.whl", hash = "sha256:f7ff167f8acd0931ead9d6d53968e901c0f69f322d3f90089cf413f3e4993b1f", size = 294108, upload-time = "2025-07-18T11:30:09.288Z" },
+    { url = "https://files.pythonhosted.org/packages/e8/ff/f0447faf2cfd47d274a61d2e79d63126f2c80f95f512580be4fbdab2c515/kframework-7.1.286-py3-none-any.whl", hash = "sha256:35489e1e7c90b1c49c894337b05d0413409c0fb9f6e2ee2a743a671f876ea6ab", size = 294119, upload-time = "2025-09-13T03:45:08.119Z" },
 ]
 
 [[package]]
 name = "kmir"
-version = "0.4.33"
-source = { git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=v0.4.33#0b6f0d4e7493e420d5f7d4222d738fd15b2393d5" }
+version = "0.4.34"
+source = { git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=v0.4.34#952befbb4e0868fae95580a48aa27e23b9682801" }
 dependencies = [
     { name = "kframework" },
 ]
@@ -546,7 +546,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "kmir", git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=v0.4.33" }]
+requires-dist = [{ name = "kmir", git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=v0.4.34" }]
 
 [package.metadata.requires-dev]
 dev = [
