@@ -8,7 +8,7 @@ version = "0.1.7"
 description = "K Semantics for the Solana ecosystem"
 requires-python = "~=3.10"
 dependencies = [
-    "kmir@git+https://github.com/runtimeverification/mir-semantics.git@v0.4.37#subdirectory=kmir",
+    "kmir@git+https://github.com/runtimeverification/mir-semantics.git@v0.4.38#subdirectory=kmir",
 ]
 
 [[project.authors]]
@@ -16,7 +16,7 @@ name = "Runtime Verification, Inc."
 email = "contact@runtimeverification.com"
 
 [tool.uv.sources]
-kmir = { git = "https://github.com/runtimeverification/mir-semantics.git", rev = "v0.4.37", subdirectory = "kmir" }
+kmir = { git = "https://github.com/runtimeverification/mir-semantics.git", rev = "v0.4.38", subdirectory = "kmir" }
 
 [project.scripts]
 kompass = "kompass.__main__:main"
