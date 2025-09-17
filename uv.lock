@@ -435,16 +435,16 @@ wheels = [
 
 [[package]]
 name = "hypothesis"
-version = "6.138.17"
+version = "6.139.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "attrs" },
     { name = "exceptiongroup", marker = "python_full_version < '3.11'" },
     { name = "sortedcontainers" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d2/d9/933014091e35e849a1555bc87866809dd985bb558d43734e5b9cd2191c1f/hypothesis-6.138.17.tar.gz", hash = "sha256:2419eef387211c63bed091938cf17fa909898f064d320e996bcd90383f5ce3c6", size = 466016, upload-time = "2025-09-15T22:09:21.512Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/1b/aa/a24d144b021839a87cf9e3cf4dc14926463e52381a49b373a1ecdc1a337f/hypothesis-6.139.1.tar.gz", hash = "sha256:ab5418737efbd5e3aa57a2896ae6c6eec8dc47ab39a56757988468ab12223728", size = 466127, upload-time = "2025-09-16T20:27:42.046Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/92/81/fbb1beddafb8bfc1deff69cbf6e2aaba10c1c7bdafe7a323845539ba14af/hypothesis-6.138.17-py3-none-any.whl", hash = "sha256:b2cf91f1926445cf4d44f5ec9a955c7f637f93e34247ac04e4fb44d010141c85", size = 533688, upload-time = "2025-09-15T22:09:18.063Z" },
+    { url = "https://files.pythonhosted.org/packages/04/80/c1a96a164cf0af9043c69a8124d39c2a939da473133aa2dbb59efdac96fb/hypothesis-6.139.1-py3-none-any.whl", hash = "sha256:b0b39b194688e33208bd253ce6c167dc3c3beae3ccc4f74be130382af416b5ab", size = 533754, upload-time = "2025-09-16T20:27:37.854Z" },
 ]
 
 [[package]]
@@ -512,8 +512,8 @@ wheels = [
 
 [[package]]
 name = "kmir"
-version = "0.4.38"
-source = { git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=v0.4.38#000a27b19771815cfc857892ca4f66f76b88a303" }
+version = "0.4.39"
+source = { git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=v0.4.39#5030637ecd2d28edc3039c8cc1020eac4b33943a" }
 dependencies = [
     { name = "kframework" },
     { name = "rust-demangler" },
@@ -547,7 +547,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "kmir", git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=v0.4.38" }]
+requires-dist = [{ name = "kmir", git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=v0.4.39" }]
 
 [package.metadata.requires-dev]
 dev = [
@@ -907,14 +907,14 @@ wheels = [
 
 [[package]]
 name = "pytest-mock"
-version = "3.15.0"
+version = "3.15.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pytest" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/61/99/3323ee5c16b3637b4d941c362182d3e749c11e400bea31018c42219f3a98/pytest_mock-3.15.0.tar.gz", hash = "sha256:ab896bd190316b9d5d87b277569dfcdf718b2d049a2ccff5f7aca279c002a1cf", size = 33838, upload-time = "2025-09-04T20:57:48.679Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/68/14/eb014d26be205d38ad5ad20d9a80f7d201472e08167f0bb4361e251084a9/pytest_mock-3.15.1.tar.gz", hash = "sha256:1849a238f6f396da19762269de72cb1814ab44416fa73a8686deac10b0d87a0f", size = 34036, upload-time = "2025-09-16T16:37:27.081Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2b/b3/7fefc43fb706380144bcd293cc6e446e6f637ddfa8b83f48d1734156b529/pytest_mock-3.15.0-py3-none-any.whl", hash = "sha256:ef2219485fb1bd256b00e7ad7466ce26729b30eadfc7cbcdb4fa9a92ca68db6f", size = 10050, upload-time = "2025-09-04T20:57:47.274Z" },
+    { url = "https://files.pythonhosted.org/packages/5a/cc/06253936f4a7fa2e0f48dfe6d851d9c56df896a9ab09ac019d70b760619c/pytest_mock-3.15.1-py3-none-any.whl", hash = "sha256:0a25e2eb88fe5168d535041d09a4529a188176ae608a6d249ee65abc0949630d", size = 10095, upload-time = "2025-09-16T16:37:25.734Z" },
 ]
 
 [[package]]
