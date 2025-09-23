@@ -450,16 +450,16 @@ wheels = [
 
 [[package]]
 name = "hypothesis"
-version = "6.140.0"
+version = "6.140.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "attrs" },
     { name = "exceptiongroup", marker = "python_full_version < '3.11'" },
     { name = "sortedcontainers" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e6/4d/bc00079d02c6ffc014e9bcc0533f12b4f5e74b22698df01552c4e0dcf377/hypothesis-6.140.0.tar.gz", hash = "sha256:bf6f79f19bb4e262c33849739639d94f8656510261d50a9ab74f539bcec8b782", size = 466332, upload-time = "2025-09-22T03:43:16.972Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ad/4a/3c340178b986b44b4f71ddb04625c8fb8bf815e7c7e23a6aabb2ce17e849/hypothesis-6.140.2.tar.gz", hash = "sha256:b3b4a162134eeef8a992621de6c43d80e03d44704a3c3bfb5b9d0661b375b0d2", size = 466699, upload-time = "2025-09-23T00:07:21.087Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/52/01/02849c14b948fdc5b7a6959c1f22ebeebc4002fd0f0db02f4a216353c114/hypothesis-6.140.0-py3-none-any.whl", hash = "sha256:ff251c41e4ffed6484720ffef68b31f705e62f50e22947f9f7ef1206b715f376", size = 534072, upload-time = "2025-09-22T03:43:13.951Z" },
+    { url = "https://files.pythonhosted.org/packages/e9/7d/7dd3684f9cb707b6b1e808c7f23dd0fa4a96fe106b6accd9b757c9985c50/hypothesis-6.140.2-py3-none-any.whl", hash = "sha256:4524cb84be90961563ef15634e2efe96150bbcce47621a13cff3c1b03a326663", size = 534388, upload-time = "2025-09-23T00:07:16.555Z" },
 ]
 
 [[package]]
@@ -527,8 +527,8 @@ wheels = [
 
 [[package]]
 name = "kmir"
-version = "0.4.42"
-source = { git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=v0.4.42#259768113cdb6f0faf439c5718ac2baafc96dc70" }
+version = "0.4.44"
+source = { git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=v0.4.44#e953ec4b38e1ec44d7922662bcf7ad4dae93722c" }
 dependencies = [
     { name = "kframework" },
     { name = "rust-demangler" },
@@ -562,7 +562,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "kmir", git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=v0.4.42" }]
+requires-dist = [{ name = "kmir", git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=v0.4.44" }]
 
 [package.metadata.requires-dev]
 dev = [
