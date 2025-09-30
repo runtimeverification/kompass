@@ -527,8 +527,8 @@ wheels = [
 
 [[package]]
 name = "kmir"
-version = "0.4.51"
-source = { git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=v0.4.51#1cd3c912c893762a1ab87c5c6d696fa60aad6d2a" }
+version = "0.4.52"
+source = { git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=v0.4.52#19c81f688cdf2fe998e4a32fcd8269610947aa72" }
 dependencies = [
     { name = "kframework" },
     { name = "rust-demangler" },
@@ -562,7 +562,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "kmir", git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=v0.4.51" }]
+requires-dist = [{ name = "kmir", git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=v0.4.52" }]
 
 [package.metadata.requires-dev]
 dev = [
@@ -1156,7 +1156,7 @@ wheels = [
 
 [[package]]
 name = "textual"
-version = "6.1.0"
+version = "6.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "markdown-it-py", extra = ["linkify", "plugins"] },
@@ -1165,9 +1165,9 @@ dependencies = [
     { name = "rich" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/da/44/4b524b2f06e0fa6c4ede56a4e9af5edd5f3f83cf2eea5cb4fd0ce5bbe063/textual-6.1.0.tar.gz", hash = "sha256:cc89826ca2146c645563259320ca4ddc75d183c77afb7d58acdd46849df9144d", size = 1564786, upload-time = "2025-09-02T11:42:34.655Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/18/e6/5b3aa6cc30a40246af587f3802f219f326981491a1a6b0623f07f0c4029f/textual-6.2.0.tar.gz", hash = "sha256:1561aeea3a6e9d8fa7bc3e2fcb2bb1d0c7a04e2661c0bb9fa5021cc9f1e905da", size = 1570354, upload-time = "2025-09-30T14:23:01.793Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/54/43/f91e041f239b54399310a99041faf33beae9a6e628671471d0fcd6276af4/textual-6.1.0-py3-none-any.whl", hash = "sha256:a3f5e6710404fcdc6385385db894699282dccf2ad50103cebc677403c1baadd5", size = 707840, upload-time = "2025-09-02T11:42:32.746Z" },
+    { url = "https://files.pythonhosted.org/packages/ca/97/1e6fad473147f825b1d3bec807cbf34c0c24aa6b61478df8d630cc664a44/textual-6.2.0-py3-none-any.whl", hash = "sha256:d9bb3b997a8a37687faeb0201978e7b7baf0e4644f39468f34a7bbad659bbbae", size = 710628, upload-time = "2025-09-30T14:23:00.056Z" },
 ]
 
 [[package]]
