@@ -527,8 +527,8 @@ wheels = [
 
 [[package]]
 name = "kmir"
-version = "0.4.49"
-source = { git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=v0.4.49#c5f5b94099167c0ee1e974b273ea36f6befb6782" }
+version = "0.4.51"
+source = { git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=v0.4.51#1cd3c912c893762a1ab87c5c6d696fa60aad6d2a" }
 dependencies = [
     { name = "kframework" },
     { name = "rust-demangler" },
@@ -562,7 +562,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "kmir", git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=v0.4.49" }]
+requires-dist = [{ name = "kmir", git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=v0.4.51" }]
 
 [package.metadata.requires-dev]
 dev = [
