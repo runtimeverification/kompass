@@ -527,8 +527,8 @@ wheels = [
 
 [[package]]
 name = "kmir"
-version = "0.4.65"
-source = { git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=v0.4.65#0c0d9a7996666b60b56923fd824eadce3e1e7f82" }
+version = "0.4.66"
+source = { git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=v0.4.66#81d07fed93a1d77b1aa93c58719b5e1ae367832c" }
 dependencies = [
     { name = "kframework" },
     { name = "rust-demangler" },
@@ -562,7 +562,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "kmir", git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=v0.4.65" }]
+requires-dist = [{ name = "kmir", git = "https://github.com/runtimeverification/mir-semantics.git?subdirectory=kmir&rev=v0.4.66" }]
 
 [package.metadata.requires-dev]
 dev = [
@@ -1007,14 +1007,14 @@ wheels = [
 
 [[package]]
 name = "pyupgrade"
-version = "3.20.0"
+version = "3.21.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "tokenize-rt" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c0/75/3df66861bca41394f05c5b818943fd0535bc02d5c5c512f9d859dec921f3/pyupgrade-3.20.0.tar.gz", hash = "sha256:dd6a16c13fc1a7db45796008689a9a35420bd364d681430f640c5e54a3d351ea", size = 45007, upload-time = "2025-05-23T18:55:43.239Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/cb/11/b08f5e4d50575c944e4ea0a86f070a1ba2c0d5a4dc42fac571a605ada78d/pyupgrade-3.21.0.tar.gz", hash = "sha256:3e63a882ec1d16f5621736d938952df3cdc2446501fb049e711415cb8d273960", size = 45210, upload-time = "2025-10-09T19:32:26.448Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/63/1c/8412744f89cbd251f159f790980492b38468530117f614108196665d3b1a/pyupgrade-3.20.0-py2.py3-none-any.whl", hash = "sha256:cd5bf842b863f50adad324a01c30aef60b9f698a9814848094818659c92cd1f4", size = 62452, upload-time = "2025-05-23T18:55:41.62Z" },
+    { url = "https://files.pythonhosted.org/packages/a4/4a/d18f2d6b2f9b90ec7e10843ea10e4cde0dc36091782443ee923e29d653bb/pyupgrade-3.21.0-py2.py3-none-any.whl", hash = "sha256:3a200cdc537980f371b4867f1d662e37166a7869d7713f309c1c3241c310c754", size = 62638, upload-time = "2025-10-09T19:32:25.086Z" },
 ]
 
 [[package]]
@@ -1098,15 +1098,15 @@ wheels = [
 
 [[package]]
 name = "rich"
-version = "14.1.0"
+version = "14.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "markdown-it-py" },
     { name = "pygments" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/fe/75/af448d8e52bf1d8fa6a9d089ca6c07ff4453d86c65c145d0a300bb073b9b/rich-14.1.0.tar.gz", hash = "sha256:e497a48b844b0320d45007cdebfeaeed8db2a4f4bcf49f15e455cfc4af11eaa8", size = 224441, upload-time = "2025-07-25T07:32:58.125Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/fb/d2/8920e102050a0de7bfabeb4c4614a49248cf8d5d7a8d01885fbb24dc767a/rich-14.2.0.tar.gz", hash = "sha256:73ff50c7c0c1c77c8243079283f4edb376f0f6442433aecb8ce7e6d0b92d1fe4", size = 219990, upload-time = "2025-10-09T14:16:53.064Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e3/30/3c4d035596d3cf444529e0b2953ad0466f6049528a879d27534700580395/rich-14.1.0-py3-none-any.whl", hash = "sha256:536f5f1785986d6dbdea3c75205c473f970777b4a0d6c6dd1b696aa05a3fa04f", size = 243368, upload-time = "2025-07-25T07:32:56.73Z" },
+    { url = "https://files.pythonhosted.org/packages/25/7a/b0178788f8dc6cafce37a212c99565fa1fe7872c70c6c9c1e1a372d9d88f/rich-14.2.0-py3-none-any.whl", hash = "sha256:76bc51fe2e57d2b1be1f96c524b890b816e334ab4c1e45888799bfaab0021edd", size = 243393, upload-time = "2025-10-09T14:16:51.245Z" },
 ]
 
 [[package]]
