@@ -34,7 +34,7 @@ If docker is not available, one can set up the tool chain and its prerequisites 
     This provides `rustc` and `cargo` in default versions.
 * Install `stable-mir-json` from source, using the following commands:
     ```shell
-    $ git clone https://github.com/runtimeverificationinc/stable-mir-json
+    $ git clone https://github.com/runtimeverification/stable-mir-json
     $ cd stable-mir-json
     $ cargo build --release && cargo run --bin cargo_stable_mir_json $PWD
     ```
@@ -60,7 +60,7 @@ If docker is not available, one can set up the tool chain and its prerequisites 
 
     Then download and build `kompass` itself using the following commands:
     ```shell
-    $ git clone https://github.com/runtimeverificationinc/kompass
+    $ git clone https://github.com/runtimeverification/kompass
     $ cd kompass
     $ make build
     ```
