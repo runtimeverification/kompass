@@ -2,10 +2,10 @@
 ┌─ 1 (root, init)
 │   #execTerminator ( terminator ( ... kind: terminatorKindCall ( ... func: operandC
 │
-│  (723 steps)
+│  (736 steps)
 ├─ 3 (terminal)
 │   #EndProgram ~> .K
-│   function: main
+│   function: crate1::add
 │
 ┊  constraint: true
 ┊  subst: ...

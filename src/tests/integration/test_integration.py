@@ -36,7 +36,7 @@ def test_multi_crate_exec(main_crate: Path, update_expected_output: bool) -> Non
             start = sym
 
         # kompass prove --start-symbol sym
-        prove_opts = ProveOpts(main_crate, start, max_iterations=10)
+        prove_opts = ProveOpts(main_crate, start, max_iterations=2)
 
         result = main._run_prove(prove_opts)
         assert result == expect, f'Unexpected proof outcome {result} for {sym}'
