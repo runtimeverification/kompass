@@ -85,8 +85,8 @@ jobs:
         run: docker exec --user ${USER} kompass-ci-${GITHUB_SHA} make build
       - name: 'Run integration tests'
         run: |
-          docker exec --user ${USER} kompass-ci-${GITHUB_SHA} which stable-mir-json
-          docker exec --user ${USER} kompass-ci-${GITHUB_SHA} stable-mir-json --version
+          docker exec --user ${USER} kompass-ci-${GITHUB_SHA} which stable_mir_json
+          docker exec --user ${USER} kompass-ci-${GITHUB_SHA} stable_mir_json --version
           docker exec --user ${USER} kompass-ci-${GITHUB_SHA} bash -c 'rustup default $(rustup toolchain list)'
           docker exec --user ${USER} kompass-ci-${GITHUB_SHA} make test-integration
       - name: 'Tear down Docker'
