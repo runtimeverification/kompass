@@ -8,13 +8,13 @@ from typing import TYPE_CHECKING
 from kmir.__main__ import _arg_parser as kmir_arg_parser
 from kmir.__main__ import _parse_args as kmir_parse_args
 from kmir.cargo import CargoProject
-from kmir.options import KMirOpts, ProveRawOpts, ProveRSOpts, PruneOpts, RunOpts
+from kmir.options import KMirOpts, ProveRSOpts, PruneOpts, RunOpts
 from kmir.options import ShowOpts as KMirShowOpts
 from kmir.options import ViewOpts as KMirViewOpts
 from kmir.smir import SMIRInfo
 from pyk.cterm.show import CTermShow
 from pyk.kast.pretty import PrettyPrinter
-from pyk.proof.reachability import APRProof, APRProver
+from pyk.proof.reachability import APRProof
 from pyk.proof.show import APRProofShow
 from pyk.proof.tui import APRProofViewer
 
@@ -50,26 +50,6 @@ def _kompass_prove_rs(opts: ProveRSOpts) -> None:
     print(str(proof.summary))
     if not proof.passed:
         sys.exit(1)
-
-
-def _kompass_prove_raw(opts: ProveRawOpts) -> None:
-    kompass = Kompass(HASKELL_DEF_DIR, LLVM_LIB_DIR, bug_report=opts.bug_report)
-    claim_index = kompass.get_claim_index(opts.spec_file)
-    labels = claim_index.labels(include=opts.include_labels, exclude=opts.exclude_labels)
-    for label in labels:
-        print(f'Proving {label}')
-        claim = claim_index[label]
-        if not opts.reload and opts.proof_dir is not None and APRProof.proof_data_exists(label, opts.proof_dir):
-            _LOGGER.info(f'Reading proof from disc: {opts.proof_dir}, {label}')
-            proof = APRProof.read_proof_data(opts.proof_dir, label)
-        else:
-            _LOGGER.info(f'Constructing initial proof: {label}')
-            proof = APRProof.from_claim(kompass.definition, claim, {}, proof_dir=opts.proof_dir)
-        with kompass.kcfg_explore(label) as kcfg_explore:
-            prover = APRProver(kcfg_explore, execute_depth=opts.max_depth)
-            prover.advance_proof(proof, max_iterations=opts.max_iterations)
-        summary = proof.summary
-        print(f'{summary}')
 
 
 def _kompass_view(opts: KMirViewOpts) -> None:
@@ -215,8 +195,6 @@ def kompass(args: Sequence[str]) -> None:
         # ----- kmir functionality below
         case RunOpts():
             _kompass_run(opts)
-        case ProveRawOpts():
-            _kompass_prove_raw(opts)
         case KMirViewOpts():
             _kompass_view(opts)
         case KMirShowOpts():

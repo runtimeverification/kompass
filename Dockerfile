@@ -12,9 +12,9 @@ COPY . /home/kmir/.kompass
 RUN chown -R kmir:kmir /home/kmir/.kompass
 
 USER kmir:kmir
-RUN bash -c 'rustup default $(rustup toolchain list)' && \
+RUN rustup toolchain list  && \
     cd /home/kmir/.kompass && \
-    make && \
+    make                   && \
     pip install .
 
 CMD ["kompass", "--help"]

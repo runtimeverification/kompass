@@ -13,7 +13,7 @@ clean:
 
 .PHONY: build
 build:
-	$(UV_RUN) kdist -v build kompass.\* -j4
+	$(UV_RUN) kdist -v build -j4
 
 # Tests
 
