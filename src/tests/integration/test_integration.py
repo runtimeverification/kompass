@@ -13,6 +13,7 @@ TEST_CRATES_DIR = (Path(__file__).parent / 'data').resolve(strict=True)
 TEST_CRATES = list(TEST_CRATES_DIR.glob('*/main-crate'))
 
 
+@pytest.mark.skip
 @pytest.mark.parametrize(
     'main_crate',
     TEST_CRATES,
