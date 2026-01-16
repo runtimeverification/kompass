@@ -32,7 +32,7 @@ _LOG_FORMAT: Final = '%(levelname)s %(asctime)s %(name)s - %(message)s'
 
 
 def _kompass_run(opts: RunOpts) -> None:
-    kompass = Kompass(HASKELL_DEF_DIR) if opts.haskell_backend else Kompass(LLVM_DEF_DIR)
+    kompass = Kompass(HASKELL_DEF_DIR) if opts.symbolic else Kompass(LLVM_DEF_DIR)
 
     if opts.file:
         smir_info = SMIRInfo.from_file(Path(opts.file))
@@ -133,6 +133,8 @@ def _run_view(opts: ViewOpts) -> None:
         full_printer=opts.full_display,
         smir_info=target_dir / 'debug' / 'linked.smir.json',
         omit_current_body=True,
+        haskell_target=None,
+        llvm_lib_target=None,
     )
     _kompass_view(kmir_view_opts)
 
