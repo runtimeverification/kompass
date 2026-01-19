@@ -1,42 +1,81 @@
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pyk.kdist import kdist
 from pyk.kdist.api import Target
-from pyk.ktool.kompile import LLVMKompileType, kompile
+from pyk.ktool.kompile import LLVMKompileType, PykBackend, kompile
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Callable, Mapping
     from typing import Any, Final
 
-KSRC_DIR: Final = Path(__file__).parent / 'kompass'
 
-
-class KSolanaKompileTarget(Target):
-    _kompile_args: dict[str, Any]
-
-    def __init__(self, kompile_args: Mapping[str, Any]) -> None:
-        self._kompile_args = dict(kompile_args)
+class SourceTarget(Target):
+    SRC_DIR: Final = Path(__file__).parent
 
     def build(self, output_dir: Path, deps: dict[str, Path], args: dict[str, Any], verbose: bool) -> None:
-        kompile_args = self._kompile_args
+        shutil.copytree(self.SRC_DIR / 'kompass', output_dir / 'kompass')
 
-        includes: list[Path] = kompile_args.get('include_dirs', [])
-        includes.append(kdist.get('mir-semantics.source') / 'mir-semantics')
-        kompile_args['include_dirs'] = includes
+    def source(self) -> tuple[Path, ...]:
+        return (self.SRC_DIR,)
 
+    def deps(self) -> tuple[()]:
+        return ()
+
+
+class KompileTarget(Target):
+    _kompile_args: Callable[[Path, Path], Mapping[str, Any]]
+
+    def __init__(self, kompile_args: Callable[[Path, Path], Mapping[str, Any]]):
+        self._kompile_args = kompile_args
+
+    def build(self, output_dir: Path, deps: dict[str, Path], args: dict[str, Any], verbose: bool) -> None:
+        kompile_args = self._kompile_args(
+            deps['mir-semantics.source'],
+            deps['kompass.source'],
+        )
         kompile(output_dir=output_dir, verbose=verbose, **kompile_args)
 
     def deps(self) -> tuple[str, ...]:
-        return ('mir-semantics.source',)
+        return ('mir-semantics.source', 'kompass.source')
+
+
+def _default_args(include_dirs: list[Path]) -> dict[str, Any]:
+    return {
+        'include_dirs': include_dirs,
+        'warnings_to_errors': True,
+    }
 
 
 __TARGETS__: Final = {
-    'llvm': KSolanaKompileTarget({'main_file': KSRC_DIR / 'kompass.md', 'backend': 'llvm'}),
-    'llvm-library': KSolanaKompileTarget(
-        {'main_file': KSRC_DIR / 'kompass.md', 'backend': 'llvm', 'llvm_kompile_type': LLVMKompileType.C}
+    'source': SourceTarget(),
+    'llvm': KompileTarget(
+        lambda kmir_src_dir, kompass_src_dir: {
+            'main_file': kompass_src_dir / 'kompass/kompass.md',
+            'backend': PykBackend.LLVM,
+            'md_selector': 'k & ! symbolic',
+            'opt_level': 2,
+            **_default_args(include_dirs=[kmir_src_dir, kompass_src_dir]),
+        },
     ),
-    'haskell': KSolanaKompileTarget({'main_file': KSRC_DIR / 'kompass.md', 'backend': 'haskell'}),
+    'llvm-library': KompileTarget(
+        lambda kmir_src_dir, kompass_src_dir: {
+            'main_file': kompass_src_dir / 'kompass/kompass.md',
+            'backend': PykBackend.LLVM,
+            'llvm_kompile_type': LLVMKompileType.C,
+            'md_selector': 'k & ! symbolic',
+            'opt_level': 2,
+            **_default_args(include_dirs=[kmir_src_dir, kompass_src_dir]),
+        },
+    ),
+    'haskell': KompileTarget(
+        lambda kmir_src_dir, kompass_src_dir: {
+            'main_file': kompass_src_dir / 'kompass/kompass.md',
+            'backend': PykBackend.HASKELL,
+            'md_selector': 'k & ! concrete',
+            **_default_args(include_dirs=[kmir_src_dir, kompass_src_dir]),
+        },
+    ),
 }

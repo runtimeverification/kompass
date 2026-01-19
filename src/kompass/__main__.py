@@ -109,6 +109,8 @@ def _run_prove(opts: ProveOpts) -> bool:
     prove_rs_opts = ProveRSOpts(
         rs_file=smir,
         proof_dir=opts.proof_dir if opts.proof_dir is not None else target_dir / 'proofs',
+        haskell_target='kompass.haskell',
+        llvm_lib_target='kompass.llvm-library',
         bug_report=opts.bug_report,
         max_depth=opts.max_depth,
         max_iterations=opts.max_iterations,

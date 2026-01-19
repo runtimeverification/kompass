@@ -1,10 +1,10 @@
 ```k
-requires "kmir.md"
+requires "mir-semantics/kmir.md"
 
 module KOMPASS
   imports KMIR
+endmodule
 
-  configuration
-    <kmir/>
+module KOMPASS-SYNTAX
 endmodule
 ```
