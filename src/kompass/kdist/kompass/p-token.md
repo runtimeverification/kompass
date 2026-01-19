@@ -1,15 +1,15 @@
 ```k
-requires "../kmir-ast.md"
-requires "../rt/data.md"
-requires "../kmir.md"
-requires "../rt/configuration.md"
+requires "mir-semantics/kmir-ast.md"
+requires "mir-semantics/rt/data.md"
+requires "mir-semantics/kmir.md"
+requires "mir-semantics/rt/configuration.md"
 ```
 
 This module provides specialised data types and associated access rules
 for data used by the p-token contract and its operations.
 
 ```k
-module KMIR-P-TOKEN
+module P-TOKEN
   imports TYPES
   imports BODY
   imports RT-DATA
