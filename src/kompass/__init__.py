@@ -1,3 +1,4 @@
+from importlib.metadata import version
 from typing import Final
 
-VERSION: Final = '0.1.12'
+__version__: Final = version('kompass')
