@@ -3,8 +3,12 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from kmir.kmir import KMIR
-from kmir.options import ProveRSOpts
+from kmir.kmir import KMIR, KMIRAPRNodePrinter
+from kmir.options import ProveRSOpts, ShowOpts
+from kmir.testing.fixtures import assert_or_update_show_output
+from pyk.cterm.show import CTermShow
+from pyk.kast.pretty import PrettyPrinter
+from pyk.proof.show import APRProofShow
 
 TOKEN_DATA_DIR = (Path(__file__).parent / 'data' / 'token').resolve(strict=True)
 
@@ -21,14 +25,22 @@ START_SYMBOLS: dict[str, list[str]] = {
     'spl-multisig-signer-index': ['repro'],
 }
 
+SHOW_SPECS: list[str] = [
+    'spl-multisig-iter-eq-copied-next-fail',
+]
+
 
 @pytest.mark.parametrize(
     'rs_file',
     TOKEN_PROVE_RS,
     ids=[f'{rs.parent.name}/{rs.stem}' for rs in TOKEN_PROVE_RS],
 )
-def test_token_prove_rs(rs_file: Path) -> None:
+def test_token_prove_rs(rs_file: Path, kmir: KMIR, update_expected_output: bool) -> None:
     should_fail = rs_file.stem.endswith('fail')
+    should_show = rs_file.stem in SHOW_SPECS
+
+    if update_expected_output and not should_show:
+        pytest.skip()
 
     start_symbols = START_SYMBOLS.get(rs_file.stem, ['main'])
 
@@ -40,6 +52,25 @@ def test_token_prove_rs(rs_file: Path) -> None:
             llvm_lib_target='kompass.llvm-library',
         )
         apr_proof = KMIR.prove_rs(prove_rs_opts)
+
+        if should_show:
+            printer = PrettyPrinter(kmir.definition)
+            cterm_show = CTermShow(printer.print)
+            display_opts = ShowOpts(
+                rs_file.parent, apr_proof.id, full_printer=False, smir_info=None, omit_current_body=False
+            )
+            shower = APRProofShow(
+                kmir.definition,
+                node_printer=KMIRAPRNodePrinter(cterm_show, apr_proof, display_opts),
+            )
+            show_res = '\n'.join(shower.show(apr_proof))
+            expected_file = rs_file.parent / f'show/{rs_file.stem}.{start_symbol}.expected'
+            expected_file.parent.mkdir(exist_ok=True)
+            assert_or_update_show_output(
+                show_res,
+                expected_file,
+                update=update_expected_output,
+            )
 
         if not should_fail:
             assert apr_proof.passed, f'Expected proof to pass for {rs_file.stem}::{start_symbol}'
