@@ -26,6 +26,7 @@ START_SYMBOLS: dict[str, list[str]] = {
 }
 
 SHOW_SPECS: list[str] = [
+    'spl_token_domain_data-fail',
     'spl-multisig-iter-eq-copied-next-fail',
 ]
 
