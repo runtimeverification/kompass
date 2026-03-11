@@ -1,8 +1,8 @@
 ```k
-requires "../kmir-ast.md"
-requires "../rt/data.md"
-requires "../kmir.md"
-requires "../rt/configuration.md"
+requires "mir-semantics/kmir-ast.md"
+requires "mir-semantics/rt/data.md"
+requires "mir-semantics/kmir.md"
+requires "mir-semantics/rt/configuration.md"
 ```
 
 We mirror the Solana `AccountInfo` layout so that MIR code can traverse the
