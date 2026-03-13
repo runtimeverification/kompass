@@ -21,16 +21,16 @@ TEST_ARGS :=
 
 test: test-all
 
-test-all:
+test-all: build
 	$(UV_RUN) pytest src/tests --maxfail=1 --verbose --durations=0 --numprocesses=4 --dist=worksteal $(TEST_ARGS)
 
 test-unit:
 	$(UV_RUN) pytest src/tests/unit --maxfail=1 --verbose $(TEST_ARGS)
 
-test-integration:
+test-integration: build
 	$(UV_RUN) pytest src/tests/integration --maxfail=1 --verbose --durations=0 --numprocesses=4 --dist=worksteal $(TEST_ARGS)
 
-test-token:
+test-token: build
 	$(UV_RUN) pytest src/tests/integration/test_token.py --maxfail=1 --verbose --durations=0 --numprocesses=4 --dist=worksteal $(TEST_ARGS)
 
 
