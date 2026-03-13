@@ -30,6 +30,9 @@ test-unit:
 test-integration:
 	$(UV_RUN) pytest src/tests/integration --maxfail=1 --verbose --durations=0 --numprocesses=4 --dist=worksteal $(TEST_ARGS)
 
+test-token:
+	$(UV_RUN) pytest src/tests/integration/test_token.py --maxfail=1 --verbose --durations=0 --numprocesses=4 --dist=worksteal $(TEST_ARGS)
+
 
 # Coverage
 

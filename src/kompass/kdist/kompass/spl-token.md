@@ -30,8 +30,8 @@ Rent::get()                     -> returns cached or new symbolic Rent value
 
 
 ```k
-module SPL-TOKEN
-  imports P-TOKEN
+module KMIR-SPL-TOKEN
+  imports KMIR-P-TOKEN
   imports KMIR-INTRINSICS
 ```
 
@@ -280,6 +280,31 @@ RefCell<&mut [u8]>
 ```
 The `#initBorrow` helper resets borrow counters to 0 and sets the correct dynamicSize.
 
+```k
+  // #initBorrow(RefCell, N) - Initialize RefCell borrow metadata with correct buffer size
+  // RefCell<&mut [u8]> layout:
+  //   field 0: BorrowFlag (Cell<isize>) - borrow state counter
+  //   field 1: borrow count (for runtime borrow checking)
+  //   field 2: UnsafeCell<&mut [u8]> containing the actual reference with metadata
+  // This rule:
+  //   1. Resets borrow counters to 0 (no active borrows)
+  //   2. Sets the dynamicSize in metadata to N (the known buffer length: 165/82/17)
+  syntax Evaluation ::= #initBorrow(Evaluation, Int) [seqstrict(1)]
+  rule <k> #initBorrow(Aggregate ( variantIdx ( 0 ) ,
+                    ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Integer ( _ , 64 , false ))))))   // borrow flag
+                    ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Integer ( _ , 64 , false ))))))   // borrow count
+                    ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Integer ( _ , 64 , true ))))))   // inner wrapper
+                    ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Reference ( OFFSET , PLACE , MUT , metadata ( dynamicSize ( _ ) , 0 , dynamicSize ( _ ))))))))  // &mut [u8] reference
+             ), N)
+          => Aggregate ( variantIdx ( 0 ) ,
+                    ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Integer ( 0 , 64 , false ))))))   // reset borrow flag to 0
+                    ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Integer ( 0 , 64 , false ))))))   // reset borrow count to 0
+                    ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Integer ( 0 , 64 , true ))))))
+                    ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Reference ( OFFSET , PLACE , MUT , metadata ( dynamicSize ( N ) , 0 , dynamicSize ( N ))))))))  // set size to N
+             ) ...
+      </k>
+```
+
 ```{.k .symbolic}
   // Projection path constants for navigating AccountInfo structure
   // Path to the actual data buffer: AccountInfo -> data -> Rc -> RcInner -> RefCell -> UnsafeCell -> &mut [u8] -> [u8]
@@ -305,7 +330,7 @@ The `#initBorrow` helper resets borrow counters to 0 and sets the correct dynami
                         .ProjectionElems
 
   rule [cheatcode-is-spl-account]:
-    <k> #execTerminatorCall(_, FUNC, operandCopy(place(LOCAL, PROJS)) .Operands, _DEST, TARGET, _UNWIND) ~> _CONT
+    <k> #execTerminatorCall(_, FUNC, operandCopy(place(LOCAL, PROJS)) .Operands, _DEST, TARGET, _UNWIND, _SPAN) ~> _CONT
       => #forceSetPlaceValue(
            place(LOCAL, appendP(PROJS, DATA_BUFFER_PROJS)),  // navigate to [u8] data buffer
            SPLDataBuffer(
@@ -335,48 +360,25 @@ The `#initBorrow` helper resets borrow counters to 0 and sets the correct dynami
     ensures #isSplPubkey(?SplMintKey)
       andBool #isSplPubkey(?SplTokenOwnerKey)
       andBool 0 <=Int ?SplHasDelegateKey andBool ?SplHasDelegateKey <=Int 1
-      andBool (0 ==Int #lookupDiscrAux(discriminant(0) discriminant(1) .Discriminants, ?SplHasDelegateKey) orBool 1 ==Int #lookupDiscrAux(discriminant(0) discriminant(1) .Discriminants, ?SplHasDelegateKey))
+      andBool (0 ==Int #lookupDiscrAux(discriminant(0) discriminant(1) .Discriminants, variantIdx(?SplHasDelegateKey)) orBool 1 ==Int #lookupDiscrAux(discriminant(0) discriminant(1) .Discriminants, variantIdx(?SplHasDelegateKey)))
       andBool #isSplPubkey(?SplDelegateKey)
       andBool 0 <=Int ?SplAmount andBool ?SplAmount <Int (1 <<Int 64)
       andBool 0 <=Int ?SplAccountState andBool ?SplAccountState <=Int 2
       andBool 0 <=Int ?SplDelegatedAmount andBool ?SplDelegatedAmount <Int (1 <<Int 64)
       andBool 0 <=Int ?SplIsNativeLamportsVariant andBool ?SplIsNativeLamportsVariant <=Int 1
-      andBool (0 ==Int #lookupDiscrAux(discriminant(0) discriminant(1) .Discriminants, ?SplIsNativeLamportsVariant) orBool 1 ==Int #lookupDiscrAux(discriminant(0) discriminant(1) .Discriminants, ?SplIsNativeLamportsVariant))
+      andBool (0 ==Int #lookupDiscrAux(discriminant(0) discriminant(1) .Discriminants, variantIdx(?SplIsNativeLamportsVariant)) orBool 1 ==Int #lookupDiscrAux(discriminant(0) discriminant(1) .Discriminants, variantIdx(?SplIsNativeLamportsVariant)))
       andBool 0 <=Int ?SplIsNativeLamports andBool ?SplIsNativeLamports <Int (1 <<Int 64)
       andBool 0 <=Int ?SplHasCloseAuthKey andBool ?SplHasCloseAuthKey <=Int 1
-      andBool (0 ==Int #lookupDiscrAux(discriminant(0) discriminant(1) .Discriminants, ?SplHasCloseAuthKey) orBool 1 ==Int #lookupDiscrAux(discriminant(0) discriminant(1) .Discriminants, ?SplHasCloseAuthKey))
+      andBool (0 ==Int #lookupDiscrAux(discriminant(0) discriminant(1) .Discriminants, variantIdx(?SplHasCloseAuthKey)) orBool 1 ==Int #lookupDiscrAux(discriminant(0) discriminant(1) .Discriminants, variantIdx(?SplHasCloseAuthKey)))
       andBool #isSplPubkey(?SplCloseAuthKey)
     [priority(30), preserves-definedness]
-
-  // #initBorrow(RefCell, N) - Initialize RefCell borrow metadata with correct buffer size
-  // RefCell<&mut [u8]> layout:
-  //   field 0: BorrowFlag (Cell<isize>) - borrow state counter
-  //   field 1: borrow count (for runtime borrow checking)
-  //   field 2: UnsafeCell<&mut [u8]> containing the actual reference with metadata
-  // This rule:
-  //   1. Resets borrow counters to 0 (no active borrows)
-  //   2. Sets the dynamicSize in metadata to N (the known buffer length: 165/82/17)
-  syntax Evaluation ::= #initBorrow(Evaluation, Int) [seqstrict(1)]
-  rule <k> #initBorrow(Aggregate ( variantIdx ( 0 ) ,
-                    ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Integer ( _ , 64 , false ))))))   // borrow flag
-                    ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Integer ( _ , 64 , false ))))))   // borrow count
-                    ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Integer ( _ , 64 , true ))))))   // inner wrapper
-                    ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Reference ( OFFSET , PLACE , MUT , metadata ( dynamicSize ( _ ) , 0 , dynamicSize ( _ ))))))))  // &mut [u8] reference
-             ), N)
-          => Aggregate ( variantIdx ( 0 ) ,
-                    ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Integer ( 0 , 64 , false ))))))   // reset borrow flag to 0
-                    ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Integer ( 0 , 64 , false ))))))   // reset borrow count to 0
-                    ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Integer ( 0 , 64 , true ))))))
-                    ListItem (Aggregate ( variantIdx ( 0 ) , ListItem (Reference ( OFFSET , PLACE , MUT , metadata ( dynamicSize ( N ) , 0 , dynamicSize ( N ))))))))  // set size to N
-             ) ...
-      </k>
 
   rule <k> #traverseProjection(DEST, SPLDataBuffer(VAL), .ProjectionElems, CTXTS) ~> #derefTruncate(dynamicSize (_), PROJS)
         => #traverseProjection(DEST, SPLDataBuffer(VAL), PROJS, CTXTS) ...
        </k>
 
   rule [cheatcode-is-spl-mint]:
-    <k> #execTerminatorCall(_, FUNC, operandCopy(place(LOCAL, PROJS)) .Operands, _DEST, TARGET, _UNWIND) ~> _CONT
+    <k> #execTerminatorCall(_, FUNC, operandCopy(place(LOCAL, PROJS)) .Operands, _DEST, TARGET, _UNWIND, _SPAN) ~> _CONT
       => #forceSetPlaceValue(
            place(LOCAL, appendP(PROJS, DATA_BUFFER_PROJS)),  // navigate to [u8] data buffer
            SPLDataBuffer(
@@ -402,17 +404,17 @@ The `#initBorrow` helper resets borrow counters to 0 and sets the correct dynami
     requires #functionName(FUNC) ==String "spl_token::entrypoint::cheatcode_is_spl_mint"
       orBool #functionName(FUNC) ==String "cheatcode_is_spl_mint"
     ensures 0 <=Int ?SplMintHasAuthKey andBool ?SplMintHasAuthKey <=Int 1
-      andBool (0 ==Int #lookupDiscrAux(discriminant(0) discriminant(1) .Discriminants, ?SplMintHasAuthKey) orBool 1 ==Int #lookupDiscrAux(discriminant(0) discriminant(1) .Discriminants, ?SplMintHasAuthKey))
+      andBool (0 ==Int #lookupDiscrAux(discriminant(0) discriminant(1) .Discriminants, variantIdx(?SplMintHasAuthKey)) orBool 1 ==Int #lookupDiscrAux(discriminant(0) discriminant(1) .Discriminants, variantIdx(?SplMintHasAuthKey)))
       andBool #isSplPubkey(?SplMintAuthorityKey)
       andBool 0 <=Int ?SplMintHasFreezeKey andBool ?SplMintHasFreezeKey <=Int 1
-      andBool (0 ==Int #lookupDiscrAux(discriminant(0) discriminant(1) .Discriminants, ?SplMintHasFreezeKey) orBool 1 ==Int #lookupDiscrAux(discriminant(0) discriminant(1) .Discriminants, ?SplMintHasFreezeKey))
+      andBool (0 ==Int #lookupDiscrAux(discriminant(0) discriminant(1) .Discriminants, variantIdx(?SplMintHasFreezeKey)) orBool 1 ==Int #lookupDiscrAux(discriminant(0) discriminant(1) .Discriminants, variantIdx(?SplMintHasFreezeKey)))
       andBool #isSplPubkey(?SplMintFreezeAuthorityKey)
       andBool 0 <=Int ?SplMintSupply andBool ?SplMintSupply <Int (1 <<Int 64)
       andBool 0 <=Int ?SplMintDecimals andBool ?SplMintDecimals <Int 256
     [priority(30), preserves-definedness]
 
   rule [cheatcode-is-spl-rent]:
-    <k> #execTerminatorCall(_, FUNC, operandCopy(place(LOCAL, PROJS)) .Operands, _DEST, TARGET, _UNWIND) ~> _CONT
+    <k> #execTerminatorCall(_, FUNC, operandCopy(place(LOCAL, PROJS)) .Operands, _DEST, TARGET, _UNWIND, _SPAN) ~> _CONT
       => #forceSetPlaceValue(
            place(LOCAL, appendP(PROJS, DATA_BUFFER_PROJS)),  // navigate to [u8] data buffer
            SPLDataBuffer(
@@ -436,7 +438,7 @@ The `#initBorrow` helper resets borrow counters to 0 and sets the correct dynami
     [priority(30), preserves-definedness]
 
   rule [cheatcode-is-spl-multisig]:
-    <k> #execTerminatorCall(_, FUNC, operandCopy(place(LOCAL, PROJS)) .Operands, _DEST, TARGET, _UNWIND) ~> _CONT
+    <k> #execTerminatorCall(_, FUNC, operandCopy(place(LOCAL, PROJS)) .Operands, _DEST, TARGET, _UNWIND, _SPAN) ~> _CONT
       => #forceSetPlaceValue(
            place(LOCAL, appendP(PROJS, DATA_BUFFER_PROJS)),  // navigate to [u8] data buffer
            SPLDataBuffer(
@@ -445,17 +447,17 @@ The `#initBorrow` helper resets borrow counters to 0 and sets the correct dynami
                ListItem(Integer(?SplMultisigN:Int, 8, false))                                             // n: u8
                ListItem(BoolVal(?_SplMultisigInitialised:Bool))                                           // is_initialized: bool
                ListItem(Range(                                                                            // signers: [Pubkey; 11]
-                 ListItem(?SplSigner0:List)
-                 ListItem(?SplSigner1:List)
-                 ListItem(?SplSigner2:List)
-                 ListItem(?SplSigner3:List)
-                 ListItem(?SplSigner4:List)
-                 ListItem(?SplSigner5:List)
-                 ListItem(?SplSigner6:List)
-                 ListItem(?SplSigner7:List)
-                 ListItem(?SplSigner8:List)
-                 ListItem(?SplSigner9:List)
-                 ListItem(?SplSigner10:List)
+                 ListItem(Aggregate(variantIdx(0), ListItem(Range(?SplSigner0:List))))
+                 ListItem(Aggregate(variantIdx(0), ListItem(Range(?SplSigner1:List))))
+                 ListItem(Aggregate(variantIdx(0), ListItem(Range(?SplSigner2:List))))
+                 ListItem(Aggregate(variantIdx(0), ListItem(Range(?SplSigner3:List))))
+                 ListItem(Aggregate(variantIdx(0), ListItem(Range(?SplSigner4:List))))
+                 ListItem(Aggregate(variantIdx(0), ListItem(Range(?SplSigner5:List))))
+                 ListItem(Aggregate(variantIdx(0), ListItem(Range(?SplSigner6:List))))
+                 ListItem(Aggregate(variantIdx(0), ListItem(Range(?SplSigner7:List))))
+                 ListItem(Aggregate(variantIdx(0), ListItem(Range(?SplSigner8:List))))
+                 ListItem(Aggregate(variantIdx(0), ListItem(Range(?SplSigner9:List))))
+                 ListItem(Aggregate(variantIdx(0), ListItem(Range(?SplSigner10:List))))
                ))
              )
            )
@@ -489,7 +491,7 @@ The `#initBorrow` helper resets borrow counters to 0 and sets the correct dynami
 ```k
   // RefCell::<&mut [u8]>::borrow / borrow_mut - returns Ref/RefMut wrapper with pointer to data
   rule [spl-borrow-data]:
-    <k> #execTerminatorCall(_, FUNC, operandCopy(place(LOCAL, PROJS)) .Operands, DEST, TARGET, _UNWIND) ~> _CONT
+    <k> #execTerminatorCall(_, FUNC, operandCopy(place(LOCAL, PROJS)) .Operands, DEST, TARGET, _UNWIND, _SPAN) ~> _CONT
       => #setSPLBorrowData(DEST, operandCopy(place(LOCAL, PROJS)))
          ~> #continueAt(TARGET)
     </k>
@@ -509,7 +511,7 @@ The `#initBorrow` helper resets borrow counters to 0 and sets the correct dynami
 ```k
   // Account/Mint::unpack_from_slice, bincode::deserialize (for Rent) - extracts struct from SPLDataBuffer
   rule [spl-account-unpack]:
-    <k> #execTerminatorCall(_, FUNC, OP:Operand .Operands, DEST, TARGET, _UNWIND) ~> _CONT
+    <k> #execTerminatorCall(_, FUNC, OP:Operand .Operands, DEST, TARGET, _UNWIND, _SPAN) ~> _CONT
       => #splUnpack(DEST, #withDeref(OP))
          ~> #continueAt(TARGET)
     </k>
@@ -523,7 +525,7 @@ The `#initBorrow` helper resets borrow counters to 0 and sets the correct dynami
 
   // Account/Mint::pack_into_slice - writes struct into SPLDataBuffer
   rule [spl-account-pack]:
-    <k> #execTerminatorCall(_, FUNC, SRC:Operand DST:Operand .Operands, _DEST, TARGET, _UNWIND) ~> _CONT
+    <k> #execTerminatorCall(_, FUNC, SRC:Operand DST:Operand .Operands, _DEST, TARGET, _UNWIND, _SPAN) ~> _CONT
       => #splPack(#withDeref(SRC), #withDeref(DST)) ~> #continueAt(TARGET)
     </k>
     requires #isSPLPackFunc(#functionName(FUNC))
@@ -539,7 +541,7 @@ The `#initBorrow` helper resets borrow counters to 0 and sets the correct dynami
 ```{.k .symbolic}
   // Rent::get - returns stable value, cached in outermost frame
   rule [spl-rent-get]:
-    <k> #execTerminatorCall(_, FUNC, .Operands, DEST, TARGET, _UNWIND) ~> _CONT
+    <k> #execTerminatorCall(_, FUNC, .Operands, DEST, TARGET, _UNWIND, _SPAN) ~> _CONT
       => #writeSPLSysRent(DEST)
          ~> #continueAt(TARGET)
     </k>
@@ -592,7 +594,7 @@ The `#initBorrow` helper resets borrow counters to 0 and sets the correct dynami
 ## Pubkey comparison shortcut
 ```k
   rule [spl-cmp-pubkeys]:
-    <k> #execTerminatorCall(_, FUNC, ARG1:Operand ARG2:Operand .Operands, DEST, TARGET, _UNWIND) ~> _CONT
+    <k> #execTerminatorCall(_, FUNC, ARG1:Operand ARG2:Operand .Operands, DEST, TARGET, _UNWIND, _SPAN) ~> _CONT
       => #execSPLCmpPubkeys( DEST, #withDeref(ARG1), #withDeref(ARG2))
          ~> #continueAt(TARGET)
     </k>
@@ -620,6 +622,94 @@ Since float casts create thunks, we simplify this pattern directly to `PRODUCT *
            false)),
          castKindFloatToInt, FLOAT_TY, INT_TY)
     => Integer(PRODUCT *Int 2, 64, false)
+```
+
+## Linking identical accounts
+
+When the `AccountInfo` are provided to the program from the solana runtime,
+we restrict that if they have the same `key` then the rest of their fields are
+the same. This cheatcode should only be on two `AccountInfo` after `cheatcode_is_account`
+is called on those `AccountInfo` to set up the symbolic state. Furthermore this should
+be called prior to capturing initial state and prior to executing the implementation.
+
+```{.k .symbolic}
+  // Path to account key: &AccountInfo -> AccountInfo -> key -> &Pubkey -> Pubkey
+  syntax ProjectionElems ::= "KEY_PROJS" [alias]
+  rule KEY_PROJS => projectionElemDeref                        // deref &AccountInfo
+                    projectionElemField(fieldIdx(0), #hack())  // .key (&Pubkey)
+                    projectionElemDeref                        // deref to Pubkey
+                    .ProjectionElems
+
+  // Cheatcode to link two accounts if they have the same key
+  // Usage: cheatcode_maybe_same_account(&account1, &account2)
+  // Effect: If account1.key == account2.key, then all SPL data fields are constrained equal
+  rule [cheatcode-maybe-same-account]:
+    <k> #execTerminatorCall(_, FUNC,
+          operandCopy(place(LOCAL1, PROJS1))
+          operandCopy(place(LOCAL2, PROJS2))
+          .Operands, _DEST, TARGET, _UNWIND, _SPAN) ~> _CONT
+      => #maybeLinkAccounts(
+           operandCopy(place(LOCAL1, appendP(PROJS1, KEY_PROJS))),
+           operandCopy(place(LOCAL2, appendP(PROJS2, KEY_PROJS))),
+           operandCopy(place(LOCAL1, appendP(PROJS1, DATA_BUFFER_PROJS))),
+           operandCopy(place(LOCAL2, appendP(PROJS2, DATA_BUFFER_PROJS)))
+         ) ~> #continueAt(TARGET)
+    </k>
+    requires #functionName(FUNC) ==String "cheatcode_maybe_same_account"
+      orBool #functionName(FUNC) ==String "spl_token::entrypoint::cheatcode_maybe_same_account"
+    [priority(30), preserves-definedness]
+
+  // Helper to evaluate keys and data, then apply constraint
+  syntax KItem ::= #maybeLinkAccounts(Evaluation, Evaluation, Evaluation, Evaluation) [seqstrict]
+
+  // Case: keys are equal - add ensures clause to constrain SPL data equality
+  // The ensures clause adds the constraint that all SPL fields must be equal
+  rule <k> #maybeLinkAccounts(
+          Aggregate(variantIdx(0), ListItem(Range(KEY1))),
+          Aggregate(variantIdx(0), ListItem(Range(KEY2))),
+          SPLDataBuffer(Aggregate(variantIdx(0),
+            ListItem(Aggregate(variantIdx(0), ListItem(Range(MINT1))))
+            ListItem(Aggregate(variantIdx(0), ListItem(Range(OWNER1))))
+            ListItem(Integer(AMOUNT1, 64, false))
+            ListItem(Aggregate(variantIdx(HAS_DELEG1), ListItem(Aggregate(variantIdx(0), ListItem(Range(DELEG1))))))
+            ListItem(Aggregate(variantIdx(STATE1), .List))
+            ListItem(Aggregate(variantIdx(HAS_NATIVE1), ListItem(Integer(NATIVE1, 64, false))))
+            ListItem(Integer(DELEG_AMT1, 64, false))
+            ListItem(Aggregate(variantIdx(HAS_CLOSE1), ListItem(Aggregate(variantIdx(0), ListItem(Range(CLOSE1))))))
+          )),
+          SPLDataBuffer(Aggregate(variantIdx(0),
+            ListItem(Aggregate(variantIdx(0), ListItem(Range(MINT2))))
+            ListItem(Aggregate(variantIdx(0), ListItem(Range(OWNER2))))
+            ListItem(Integer(AMOUNT2, 64, false))
+            ListItem(Aggregate(variantIdx(HAS_DELEG2), ListItem(Aggregate(variantIdx(0), ListItem(Range(DELEG2))))))
+            ListItem(Aggregate(variantIdx(STATE2), .List))
+            ListItem(Aggregate(variantIdx(HAS_NATIVE2), ListItem(Integer(NATIVE2, 64, false))))
+            ListItem(Integer(DELEG_AMT2, 64, false))
+            ListItem(Aggregate(variantIdx(HAS_CLOSE2), ListItem(Aggregate(variantIdx(0), ListItem(Range(CLOSE2))))))
+          ))
+        ) => .K ... </k>
+    requires KEY1 ==K KEY2
+    ensures MINT1 ==K MINT2
+      andBool OWNER1 ==K OWNER2
+      andBool AMOUNT1 ==Int AMOUNT2
+      andBool HAS_DELEG1 ==Int HAS_DELEG2
+      andBool DELEG1 ==K DELEG2
+      andBool STATE1 ==Int STATE2
+      andBool HAS_NATIVE1 ==Int HAS_NATIVE2
+      andBool NATIVE1 ==Int NATIVE2
+      andBool DELEG_AMT1 ==Int DELEG_AMT2
+      andBool HAS_CLOSE1 ==Int HAS_CLOSE2
+      andBool CLOSE1 ==K CLOSE2
+    [priority(30)]
+
+  // Case: keys are different - no constraint needed
+  rule <k> #maybeLinkAccounts(
+          Aggregate(variantIdx(0), ListItem(Range(KEY1))),
+          Aggregate(variantIdx(0), ListItem(Range(KEY2))),
+          _, _
+        ) => .K ... </k>
+    requires notBool (KEY1 ==K KEY2)
+    [priority(30)]
 ```
 
 ```k

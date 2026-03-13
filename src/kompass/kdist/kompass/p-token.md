@@ -9,7 +9,7 @@ This module provides specialised data types and associated access rules
 for data used by the p-token contract and its operations.
 
 ```k
-module P-TOKEN
+module KMIR-P-TOKEN
   imports TYPES
   imports BODY
   imports RT-DATA
@@ -100,7 +100,7 @@ The code uses some helper sorts for better readability.
                | KeyError ( Value )
 
   syntax Key ::= toKey ( Value ) [function, total]
-  // -----------------------------------------------------------
+  // ---------------------------------------------
   rule toKey(Range(ELEMS)) => Key( ELEMS ) requires size(ELEMS) ==Int 32 andBool allBytes(ELEMS) [preserves-definedness]
   rule toKey(VAL) => KeyError(VAL) [owise]
 
@@ -111,7 +111,7 @@ The code uses some helper sorts for better readability.
   rule allBytes( ListItem(_OTHER) _:List) => false [owise]
 
   syntax Value ::= fromKey ( Key ) [function, total]
-  // -----------------------------------------------------------
+  // -----------------------------------------------
   // We assume that the Key always contains valid data, because it is constructed via toKey.
   rule fromKey(KeyError(VAL)) => VAL
   rule fromKey(Key(VAL))      => Range(VAL) [preserves-definedness]
@@ -125,25 +125,42 @@ This ensures that branches on the key value are not duplicated.
 
 ```k
 
-  syntax Signers ::= Signers ( List ) // 11 Pubkeys, each List of 32 bytes
+  syntax Signers ::= Signers ( List ) // 3 Pubkeys, each List of 32 bytes
                    | SignersError ( Value )
 
   syntax Signers ::= toSigners ( Value ) [function, total]
-  // -----------------------------------------------------------
-  rule toSigners(Range(ELEMS)) => Signers( ELEMS ) requires size(ELEMS) ==Int 11 andBool allKeys(ELEMS) [preserves-definedness]
+  // -----------------------------------------------------
+  rule toSigners(Range(ELEMS)) => Signers( toKeys(ELEMS) ) requires size(ELEMS) ==Int 3 andBool allRangeWrappedKeys(ELEMS)
   rule toSigners(VAL) => SignersError(VAL) [owise]
 
   syntax Value ::= fromSigners ( Signers ) [function, total]
-  // -----------------------------------------------------------
+  // -------------------------------------------------------
   // We assume that the Signers always contains valid data, because it is constructed via toSigners.
   rule fromSigners(SignersError(VAL)) => VAL
-  rule fromSigners(Signers(VAL))      => Range(VAL) [preserves-definedness]
+  rule fromSigners(Signers(VAL))      => Range(fromKeys(VAL))
+
+  syntax List ::= fromKeys ( List ) [function, total]
+                | toKeys ( List ) [function, total]
+  // ------------------------------------------------
+  rule fromKeys(.List) => .List
+  rule fromKeys(ListItem(KEY:Key) REST) => ListItem(fromKey(KEY)) fromKeys(REST)
+  rule fromKeys(ListItem(_NOTKEY) REST) => ListItem(StringVal("Not a Key")) fromKeys(REST) [owise] // HACK
+
+  rule toKeys(.List) => .List
+  rule toKeys(ListItem(KEYBYTES:Value) REST) => ListItem(toKey(KEYBYTES)) toKeys(REST)
+  rule toKeys(ListItem(   _NOTBYTES  ) REST) => ListItem(KeyError(StringVal("Not Bytes"))) toKeys(REST) [owise]
 
   syntax Bool ::= allKeys ( List ) [function, total]
   // -----------------------------------------------------------
   rule allKeys( .List ) => true
   rule allKeys( ListItem(ELEMS) REST:List ) => allKeys(REST) requires size(ELEMS) ==Int 32 andBool allBytes(ELEMS)
   rule allKeys( ListItem(_OTHER) _:List )   => false [owise]
+
+  syntax Bool ::= allRangeWrappedKeys ( List ) [function, total]
+  // -----------------------------------------------------------
+  rule allRangeWrappedKeys( .List ) => true
+  rule allRangeWrappedKeys( ListItem(Range(ELEMS)) REST:List ) => allRangeWrappedKeys(REST) requires size(ELEMS) ==Int 32 andBool allBytes(ELEMS)
+  rule allRangeWrappedKeys( ListItem(_OTHER) _:List )   => false [owise]
 ```
 
 ### SPL Token Interface Account
@@ -324,7 +341,7 @@ This ensures that branches on the key value are not duplicated.
 
 ### SPL Token Interface Multisig
 ```k
-  // Multisig struct: number of required signers, number of valid signers, initialised flag, array of 11 signers
+  // Multisig struct: number of required signers, number of valid signers, initialised flag, array of 3 signers
   syntax IMulti ::= IMulti ( U8 , U8 , U8 , Signers )
                   | IMultiError ( Value )
 
@@ -467,25 +484,25 @@ An `AccountInfo` reference is passed to the function.
 ```k
   // special rule to intercept the cheat code function calls and replace them by #mkPToken<thing>
   rule [cheatcode-is-account]:
-    <k> #execTerminatorCall(_, FUNC, operandCopy(PLACE) .Operands, _DEST, TARGET, _UNWIND) ~> _CONT
+    <k> #execTerminatorCall(_, FUNC, operandCopy(PLACE) .Operands, _DEST, TARGET, _UNWIND, _SPAN) ~> _CONT
       => #mkPTokenAccount(PLACE) ~> #continueAt(TARGET)
     </k>
     requires #functionName(FUNC) ==String "pinocchio_token_program::entrypoint::cheatcode_is_account"
     [priority(30), preserves-definedness]
   rule [cheatcode-is-mint]:
-    <k> #execTerminatorCall(_, FUNC, operandCopy(PLACE) .Operands, _DEST, TARGET, _UNWIND) ~> _CONT
+    <k> #execTerminatorCall(_, FUNC, operandCopy(PLACE) .Operands, _DEST, TARGET, _UNWIND, _SPAN) ~> _CONT
       => #mkPTokenMint(PLACE) ~> #continueAt(TARGET)
     </k>
     requires #functionName(FUNC) ==String "pinocchio_token_program::entrypoint::cheatcode_is_mint"
     [priority(30), preserves-definedness]
   rule [cheatcode-is-multisig]:
-    <k> #execTerminatorCall(_, FUNC, operandCopy(PLACE) .Operands, _DEST, TARGET, _UNWIND) ~> _CONT
+    <k> #execTerminatorCall(_, FUNC, operandCopy(PLACE) .Operands, _DEST, TARGET, _UNWIND, _SPAN) ~> _CONT
       => #mkPTokenMultisig(PLACE) ~> #continueAt(TARGET)
     </k>
     requires #functionName(FUNC) ==String "pinocchio_token_program::entrypoint::cheatcode_is_multisig"
     [priority(30), preserves-definedness]
   rule [cheatcode-is-rent]:
-    <k> #execTerminatorCall(_, FUNC, operandCopy(PLACE) .Operands, _DEST, TARGET, _UNWIND) ~> _CONT
+    <k> #execTerminatorCall(_, FUNC, operandCopy(PLACE) .Operands, _DEST, TARGET, _UNWIND, _SPAN) ~> _CONT
       => #mkPTokenRent(PLACE) ~> #continueAt(TARGET)
     </k>
     requires #functionName(FUNC) ==String "pinocchio_token_program::entrypoint::cheatcode_is_rent"
@@ -648,14 +665,19 @@ An `AccountInfo` reference is passed to the function.
            IMulti(U8(?M),
                   U8(?N),
                   U8(?INITIALISED),
-                  Signers(?SIGNERS)
+                  Signers( ListItem(Key(?Signer0))
+                           ListItem(Key(?Signer1))
+                           ListItem(Key(?Signer2))
+                  )
            )
          )
     ensures 0 <=Int ?M andBool ?M <=Int 256
     andBool 0 <=Int ?N andBool ?N <=Int 256
     andBool 0 <=Int ?INITIALISED andBool ?INITIALISED <=Int 256
-    andBool size(?SIGNERS) ==Int 11 andBool allKeys(?SIGNERS)
-    andBool DATA_LEN ==Int 355 // size_of(Multisig), see pinocchio_token_interface::state::Transmutable instance
+    andBool size(?Signer0)  ==Int 32 andBool allBytes(?Signer0)
+    andBool size(?Signer1)  ==Int 32 andBool allBytes(?Signer1)
+    andBool size(?Signer2)  ==Int 32 andBool allBytes(?Signer2)
+    andBool DATA_LEN ==Int 99 // size_of(Multisig), see pinocchio_token_interface::state::Transmutable instance
 ```
 
 ```{.k .concrete}
@@ -663,7 +685,7 @@ An `AccountInfo` reference is passed to the function.
   // Signers and n. It needs work to create sensible cases.
   rule #addMultisig(Aggregate(variantIdx(0), _) #as P_ACC)
       => PAccountMultisig(
-           #toPAccWithDataLen(P_ACC, 355), // size_of(Multisig), see pinocchio_token_interface::state::Transmutable instance
+           #toPAccWithDataLen(P_ACC, 99), // size_of(Multisig), see pinocchio_token_interface::state::Transmutable instance
            IMulti(U8(#randU8()),           // m (number of signers required)
                   U8(#randU8()),           // n (number of valid signers)
                   U8(#randU8()),           // initialized (0 - false, 1 - true, error state owise)
@@ -733,7 +755,7 @@ The `PAccByteRef` carries a stack offset, so it must be adjusted on reads.
 ```k
   // intercept calls to `borrow_data_unchecked` and write `PAccountRef` to destination
   rule [cheatcode-borrow-data]:
-    <k> #execTerminatorCall(_, FUNC, operandCopy(place(LOCAL, PROJS)) .Operands, DEST, TARGET, _UNWIND) ~> _CONT
+    <k> #execTerminatorCall(_, FUNC, operandCopy(place(LOCAL, PROJS)) .Operands, DEST, TARGET, _UNWIND, _SPAN) ~> _CONT
     => #mkPAccByteRef(DEST, operandCopy(place(LOCAL, appendP(PROJS, projectionElemDeref projectionElemField(fieldIdx(0), #hack()) .ProjectionElems))), mutabilityNot)
       ~> #continueAt(TARGET)
     </k>
@@ -742,7 +764,7 @@ The `PAccByteRef` carries a stack offset, so it must be adjusted on reads.
 
   // intercept calls to `borrow_mut_data_unchecked` and write `PAccountRef` to destination
   rule [cheatcode-borrow-mut-data]:
-    <k> #execTerminatorCall(_, FUNC, operandCopy(place(LOCAL, PROJS)) .Operands, DEST, TARGET, _UNWIND) ~> _CONT
+    <k> #execTerminatorCall(_, FUNC, operandCopy(place(LOCAL, PROJS)) .Operands, DEST, TARGET, _UNWIND, _SPAN) ~> _CONT
     => #mkPAccByteRef(DEST, operandCopy(place(LOCAL, appendP(PROJS, projectionElemDeref projectionElemField(fieldIdx(0), #hack()) .ProjectionElems))), mutabilityMut)
       ~> #continueAt(TARGET)
     </k>
@@ -787,10 +809,10 @@ this field is expected to be constrained accordingly in the path condition.
        </k>
     requires DATA_LEN ==Int 82 // IMint length
   rule <k> #mkPAccByteRefLen(DEST, OFFSET, PLACE, MUT, PAccountMultisig(PAcc(_, _, _, _, _, _, _, _, U64(DATA_LEN)), _))
-        => #setLocalValue(DEST, PAccByteRef(OFFSET, PLACE, MUT, 355))
+        => #setLocalValue(DEST, PAccByteRef(OFFSET, PLACE, MUT, 99))
         ...
        </k>
-    requires DATA_LEN ==Int 355 // IMulti length
+    requires DATA_LEN ==Int 99 // IMulti length
   rule <k> #mkPAccByteRefLen(DEST, OFFSET, PLACE, MUT, PAccountRent(PAcc(_, _, _, _, _, _, _, _, U64(DATA_LEN)), _))
       => #setLocalValue(DEST, PAccByteRef(OFFSET, PLACE, MUT, 17))
       ...
@@ -810,7 +832,7 @@ NB Both `load_unchecked` and `load_mut_unchecked` are intercepted in the same wa
 ```k
   // intercept calls to `load_unchecked` and `load_mut_unchecked`
   rule [cheatcode-mk-iface-account-ref]:
-    <k> #execTerminatorCall(_, FUNC, OPERAND .Operands, DEST, TARGET, _UNWIND) ~> _CONT
+    <k> #execTerminatorCall(_, FUNC, OPERAND .Operands, DEST, TARGET, _UNWIND, _SPAN) ~> _CONT
     => #mkPAccountRef(DEST, OPERAND, PAccountIAcc, true)
       ~> #continueAt(TARGET)
     </k>
@@ -822,7 +844,7 @@ NB Both `load_unchecked` and `load_mut_unchecked` are intercepted in the same wa
     [priority(30), preserves-definedness]
 
   rule [cheatcode-mk-imint-ref]:
-    <k> #execTerminatorCall(_, FUNC, OPERAND .Operands, DEST, TARGET, _UNWIND) ~> _CONT
+    <k> #execTerminatorCall(_, FUNC, OPERAND .Operands, DEST, TARGET, _UNWIND, _SPAN) ~> _CONT
     => #mkPAccountRef(DEST, OPERAND, PAccountIMint, true)
       ~> #continueAt(TARGET)
     </k>
@@ -834,7 +856,7 @@ NB Both `load_unchecked` and `load_mut_unchecked` are intercepted in the same wa
     [priority(30), preserves-definedness]
 
   rule [cheatcode-mk-imulti-ref]:
-    <k> #execTerminatorCall(_, FUNC, OPERAND .Operands, DEST, TARGET, _UNWIND) ~> _CONT
+    <k> #execTerminatorCall(_, FUNC, OPERAND .Operands, DEST, TARGET, _UNWIND, _SPAN) ~> _CONT
     => #mkPAccountRef(DEST, OPERAND, PAccountIMulti, true)
       ~> #continueAt(TARGET)
     </k>
@@ -846,7 +868,7 @@ NB Both `load_unchecked` and `load_mut_unchecked` are intercepted in the same wa
     [priority(30), preserves-definedness]
 
   rule [cheatcode-mk-prent-ref]:
-    <k> #execTerminatorCall(_, FUNC, OPERAND .Operands, DEST, TARGET, _UNWIND) ~> _CONT
+    <k> #execTerminatorCall(_, FUNC, OPERAND .Operands, DEST, TARGET, _UNWIND, _SPAN) ~> _CONT
     => #mkPAccountRef(DEST, OPERAND, PAccountPRent, false)
       ~> #continueAt(TARGET)
     </k>
@@ -892,7 +914,7 @@ Therefore, the value gets created in a dedicated place on first access.
 
 ```k
   rule [cheatcode-get-sys-prent]:
-    <k> #execTerminatorCall(_, FUNC, .Operands, DEST, TARGET, _UNWIND) ~> _CONT
+    <k> #execTerminatorCall(_, FUNC, .Operands, DEST, TARGET, _UNWIND, _SPAN) ~> _CONT
       => #writeSysRent(DEST)
       ~> #continueAt(TARGET)
     </k>
@@ -1148,14 +1170,6 @@ NB The projection rule must have higher priority than the one which auto-project
 
   syntax Signers ::= #randSigners() [function, total, impure, symbol(randSigners)]
   rule #randSigners() => Signers(ListItem(#randKey())
-                                 ListItem(#randKey())
-                                 ListItem(#randKey())
-                                 ListItem(#randKey())
-                                 ListItem(#randKey())
-                                 ListItem(#randKey())
-                                 ListItem(#randKey())
-                                 ListItem(#randKey())
-                                 ListItem(#randKey())
                                  ListItem(#randKey())
                                  ListItem(#randKey()))
 ```
