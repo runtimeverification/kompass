@@ -8,7 +8,9 @@ from typing import TYPE_CHECKING
 from kmir.__main__ import _arg_parser as kmir_arg_parser
 from kmir.__main__ import _parse_args as kmir_parse_args
 from kmir.cargo import CargoProject
-from kmir.options import KMirOpts, ProveRSOpts, PruneOpts, RunOpts
+from kmir.options import KMirOpts
+from kmir.options import ProveOpts as KMirProveOpts
+from kmir.options import PruneOpts, RunOpts
 from kmir.options import ShowOpts as KMirShowOpts
 from kmir.options import ViewOpts as KMirViewOpts
 from kmir.smir import SMIRInfo
@@ -44,9 +46,9 @@ def _kompass_run(opts: RunOpts) -> None:
     print(kompass.kore_to_pretty(result))
 
 
-def _kompass_prove_rs(opts: ProveRSOpts) -> None:
+def _kompass_prove(opts: KMirProveOpts) -> None:
     kompass = Kompass(HASKELL_DEF_DIR, LLVM_LIB_DIR, bug_report=opts.bug_report)
-    proof = kompass.prove_rs(opts)
+    proof = kompass.prove_program(opts)
     print(str(proof.summary))
     if not proof.passed:
         sys.exit(1)
@@ -106,7 +108,7 @@ def _run_prove(opts: ProveOpts) -> bool:
 
     kompass = Kompass(HASKELL_DEF_DIR, LLVM_LIB_DIR, bug_report=opts.bug_report)
 
-    prove_rs_opts = ProveRSOpts(
+    prove_opts = KMirProveOpts(
         rs_file=smir,
         proof_dir=opts.proof_dir if opts.proof_dir is not None else target_dir / 'proofs',
         haskell_target='kompass.haskell',
@@ -119,7 +121,7 @@ def _run_prove(opts: ProveOpts) -> bool:
         smir=True,
         start_symbol=opts.start_symbol,
     )
-    proof = kompass.prove_rs(prove_rs_opts)
+    proof = kompass.prove_program(prove_opts)
     print(str(proof.summary))
     return proof.passed
 
@@ -205,8 +207,8 @@ def kompass(args: Sequence[str]) -> None:
             _kompass_show(opts)
         case PruneOpts():
             _kompass_prune(opts)
-        case ProveRSOpts():
-            _kompass_prove_rs(opts)
+        case KMirProveOpts():
+            _kompass_prove(opts)
         case _:
             raise AssertionError
 
