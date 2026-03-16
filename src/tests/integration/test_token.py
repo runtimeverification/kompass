@@ -4,7 +4,8 @@ from pathlib import Path
 
 import pytest
 from kmir.kmir import KMIR, KMIRAPRNodePrinter
-from kmir.options import ProveRSOpts, ShowOpts
+from kmir.options import ProveOpts as KMirProveOpts
+from kmir.options import ShowOpts
 from kmir.testing.fixtures import assert_or_update_show_output
 from pyk.cterm.show import CTermShow
 from pyk.kast.pretty import PrettyPrinter
@@ -46,13 +47,13 @@ def test_token_prove_rs(rs_file: Path, kmir: KMIR, update_expected_output: bool)
     start_symbols = START_SYMBOLS.get(rs_file.stem, ['main'])
 
     for start_symbol in start_symbols:
-        prove_rs_opts = ProveRSOpts(
+        prove_opts = KMirProveOpts(
             rs_file,
             start_symbol=start_symbol,
             haskell_target='kompass.haskell',
             llvm_lib_target='kompass.llvm-library',
         )
-        apr_proof = KMIR.prove_rs(prove_rs_opts)
+        apr_proof = KMIR.prove_program(prove_opts)
 
         if should_show:
             printer = PrettyPrinter(kmir.definition)
