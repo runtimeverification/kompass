@@ -33,5 +33,17 @@ jobs:
           uv lock --upgrade
           git add pyproject.toml uv.lock
           git commit -m '{pyproject.toml,uv.lock}: sync uv files, KMIR version '${KMIR_VERSION} || true
+      - name: 'Sync K definition files from feature/p-token'
+        run: |
+          git clone --depth 1 --branch feature/p-token \
+            https://github.com/runtimeverification/mir-semantics.git /tmp/mir-semantics
+          for f in p-token.md spl-token.md info.md; do
+            cp /tmp/mir-semantics/kmir/src/kmir/kdist/mir-semantics/symbolic/$f \
+               src/kompass/kdist/kompass/$f
+            sed -i 's|requires "../|requires "mir-semantics/|g' src/kompass/kdist/kompass/$f
+          done
+          rm -rf /tmp/mir-semantics
+          git add src/kompass/kdist/kompass/
+          git commit -m 'Sync K definition files from feature/p-token' || true
       - name: 'Push updates'
         run: git push
