@@ -119,7 +119,7 @@ def _run_prove(opts: ProveOpts) -> bool:
         reload=opts.reload,
         save_smir=False,
         smir=True,
-        start_symbol=opts.start_symbol,
+        start_symbols=[opts.start_symbol],
     )
     proof = kompass.prove_program(prove_opts)
     print(str(proof.summary))

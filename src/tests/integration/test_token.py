@@ -49,7 +49,7 @@ def test_token_prove_rs(rs_file: Path, kmir: KMIR, update_expected_output: bool)
     for start_symbol in start_symbols:
         prove_opts = KMirProveOpts(
             rs_file,
-            start_symbol=start_symbol,
+            start_symbols=[start_symbol],
             haskell_target='kompass.haskell',
             llvm_lib_target='kompass.llvm-library',
         )
