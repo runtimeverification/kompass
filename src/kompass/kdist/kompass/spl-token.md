@@ -63,7 +63,7 @@ module KMIR-SPL-TOKEN
 
   rule <k> #traverseProjection(toLocal(I), _ORIGINAL, .ProjectionElems, CONTEXTS)
         ~> #writeProjectionForce(NEW)
-        => #forceSetLocal(local(I), #buildUpdate(NEW, CONTEXTS))
+        => #setLocalValue(place(local(I), .ProjectionElems), #buildUpdate(NEW, CONTEXTS))
        ...
        </k>
        <locals> LOCALS </locals>
@@ -106,6 +106,43 @@ module KMIR-SPL-TOKEN
 ```k
   syntax Bool ::= #isSplPubkey ( List ) [function, total]
   rule #isSplPubkey(KEY) => size(KEY) ==Int 32 andBool allBytes(KEY)
+
+  syntax Bool ::= #isZeroMemsetValue ( Value ) [function, total]
+  rule #isZeroMemsetValue(Integer(0, _, _)) => true
+  rule #isZeroMemsetValue(_) => false [owise]
+
+  // Construct a 32-byte pubkey List from individual Int variables.
+  // When used with existential variables (?Var:Int), this produces a concrete List structure
+  // that ==K can decompose element-wise, avoiding opaque symbolic List equality in SMT.
+  syntax List ::= #mkSplPubkey (
+    Int , Int , Int , Int , Int , Int , Int , Int ,
+    Int , Int , Int , Int , Int , Int , Int , Int ,
+    Int , Int , Int , Int , Int , Int , Int , Int ,
+    Int , Int , Int , Int , Int , Int , Int , Int ) [macro]
+  rule #mkSplPubkey(
+    B0,  B1,  B2,  B3,  B4,  B5,  B6,  B7,
+    B8,  B9,  B10, B11, B12, B13, B14, B15,
+    B16, B17, B18, B19, B20, B21, B22, B23,
+    B24, B25, B26, B27, B28, B29, B30, B31 ) =>
+      ListItem(Integer(B0,  8, false)) ListItem(Integer(B1,  8, false))
+      ListItem(Integer(B2,  8, false)) ListItem(Integer(B3,  8, false))
+      ListItem(Integer(B4,  8, false)) ListItem(Integer(B5,  8, false))
+      ListItem(Integer(B6,  8, false)) ListItem(Integer(B7,  8, false))
+      ListItem(Integer(B8,  8, false)) ListItem(Integer(B9,  8, false))
+      ListItem(Integer(B10, 8, false)) ListItem(Integer(B11, 8, false))
+      ListItem(Integer(B12, 8, false)) ListItem(Integer(B13, 8, false))
+      ListItem(Integer(B14, 8, false)) ListItem(Integer(B15, 8, false))
+      ListItem(Integer(B16, 8, false)) ListItem(Integer(B17, 8, false))
+      ListItem(Integer(B18, 8, false)) ListItem(Integer(B19, 8, false))
+      ListItem(Integer(B20, 8, false)) ListItem(Integer(B21, 8, false))
+      ListItem(Integer(B22, 8, false)) ListItem(Integer(B23, 8, false))
+      ListItem(Integer(B24, 8, false)) ListItem(Integer(B25, 8, false))
+      ListItem(Integer(B26, 8, false)) ListItem(Integer(B27, 8, false))
+      ListItem(Integer(B28, 8, false)) ListItem(Integer(B29, 8, false))
+      ListItem(Integer(B30, 8, false)) ListItem(Integer(B31, 8, false))
+
+  syntax Bool ::= #isByte ( Int ) [macro]
+  rule #isByte(X) => 0 <=Int X andBool X <Int 256
 
   // AccountState in SPL semantics is carried as an enum variantIdx(0..2); accept legacy u8 too.
   syntax Bool ::= #isSplAccountStateVal ( Value ) [function, total]
@@ -150,6 +187,10 @@ module KMIR-SPL-TOKEN
   rule #isSPLRentGetFunc(_) => false [owise]
   rule #isSPLRentGetFunc("Rent::get") => true   // mock harness
   rule #isSPLRentGetFunc("solana_sysvar::rent::<impl Sysvar for solana_rent::Rent>::get") => true
+
+  syntax Bool ::= #isSPLSolMemsetFunc ( String ) [function, total]
+  rule #isSPLSolMemsetFunc(_) => false [owise]
+  rule #isSPLSolMemsetFunc("solana_program_memory::sol_memset") => true
 ```
 
 ## Slice metadata for SPL account buffers
@@ -221,6 +262,69 @@ module KMIR-SPL-TOKEN
        )
        => dynamicSize(99)
        [priority(30)]
+
+  syntax Int ::= #splBufferLen ( Value ) [function, total]
+
+  rule #splBufferLen(
+         SPLDataBuffer(
+         Aggregate(variantIdx(0),
+           ListItem(Aggregate(variantIdx(0), ListItem(Range(_))))
+           ListItem(Aggregate(variantIdx(0), ListItem(Range(_))))
+           ListItem(Integer(_, 64, false))
+           ListItem(_DELEG)
+           ListItem(STATE)
+           ListItem(_IS_NATIVE)
+           ListItem(Integer(_, 64, false))
+           ListItem(_CLOSE)
+         )
+       )
+      )
+       => 165
+       requires #isSplAccountStateVal(STATE)
+       [priority(30)]
+
+  rule #splBufferLen(
+         SPLDataBuffer(
+           Aggregate(variantIdx(0),
+             ListItem(_AUTH)
+             ListItem(Integer(_, 64, false))
+             ListItem(Integer(_, 8, false))
+             ListItem(BoolVal(_))
+             ListItem(_FREEZE)
+           )
+         )
+       )
+       => 82
+       [priority(30)]
+
+  rule #splBufferLen(
+         SPLDataBuffer(
+           Aggregate(variantIdx(0),
+             ListItem(Integer(_, 64, false))
+             ListItem(Float(2.0, 64))
+             ListItem(Integer(_, 8, false))
+           )
+         )
+       )
+       => 17
+       [priority(30)]
+
+  rule #splBufferLen(
+         SPLDataBuffer(
+           Aggregate(variantIdx(0),
+             ListItem(Integer(_, 8, false))
+             ListItem(Integer(_, 8, false))
+             ListItem(BoolVal(_))
+             ListItem(Range(
+               ListItem(_) ListItem(_) ListItem(_)
+             ))
+           )
+         )
+       )
+       => 99 // Multisig layout: m (1) + n (1) + is_initialized (1) + 3 * 32 signer bytes (MAX_SIGNERS = 3)
+       [priority(30)]
+
+  rule #splBufferLen(_) => 0 [owise]
 ```
 
 ## Cheatcode handling
@@ -435,6 +539,10 @@ The `#initBorrow` helper resets borrow counters to 0 and sets the correct dynami
       andBool 0 <=Int ?SplRentBurnPercent andBool ?SplRentBurnPercent <=Int 100
     [priority(30), preserves-definedness]
 
+  // Multisig cheatcode: decompose signer pubkeys into individual byte variables.
+  // Each ?SplSiNBj:Int is a single byte (0..255), giving 32 concrete ListItems per signer.
+  // This allows ==K on pubkey Lists to decompose into integer equalities (fast for SMT),
+  // instead of opaque symbolic List equality (causes Z3 timeout at scale).
   rule [cheatcode-is-spl-multisig]:
     <k> #execTerminatorCall(_, FUNC, operandCopy(place(LOCAL, PROJS)) .Operands, _DEST, TARGET, _UNWIND, _SPAN) ~> _CONT
       => #forceSetPlaceValue(
@@ -445,9 +553,33 @@ The `#initBorrow` helper resets borrow counters to 0 and sets the correct dynami
                ListItem(Integer(?SplMultisigN:Int, 8, false))                                             // n: u8
                ListItem(BoolVal(?_SplMultisigInitialised:Bool))                                           // is_initialized: bool
                ListItem(Range(                                                                            // signers: [Pubkey; 3]
-                 ListItem(Aggregate(variantIdx(0), ListItem(Range(?SplSigner0:List))))
-                 ListItem(Aggregate(variantIdx(0), ListItem(Range(?SplSigner1:List))))
-                 ListItem(Aggregate(variantIdx(0), ListItem(Range(?SplSigner2:List))))
+                 ListItem(Aggregate(variantIdx(0), ListItem(Range(#mkSplPubkey(
+                   ?SplSi0B0:Int,  ?SplSi0B1:Int,  ?SplSi0B2:Int,  ?SplSi0B3:Int,
+                   ?SplSi0B4:Int,  ?SplSi0B5:Int,  ?SplSi0B6:Int,  ?SplSi0B7:Int,
+                   ?SplSi0B8:Int,  ?SplSi0B9:Int,  ?SplSi0B10:Int, ?SplSi0B11:Int,
+                   ?SplSi0B12:Int, ?SplSi0B13:Int, ?SplSi0B14:Int, ?SplSi0B15:Int,
+                   ?SplSi0B16:Int, ?SplSi0B17:Int, ?SplSi0B18:Int, ?SplSi0B19:Int,
+                   ?SplSi0B20:Int, ?SplSi0B21:Int, ?SplSi0B22:Int, ?SplSi0B23:Int,
+                   ?SplSi0B24:Int, ?SplSi0B25:Int, ?SplSi0B26:Int, ?SplSi0B27:Int,
+                   ?SplSi0B28:Int, ?SplSi0B29:Int, ?SplSi0B30:Int, ?SplSi0B31:Int)))))
+                 ListItem(Aggregate(variantIdx(0), ListItem(Range(#mkSplPubkey(
+                   ?SplSi1B0:Int,  ?SplSi1B1:Int,  ?SplSi1B2:Int,  ?SplSi1B3:Int,
+                   ?SplSi1B4:Int,  ?SplSi1B5:Int,  ?SplSi1B6:Int,  ?SplSi1B7:Int,
+                   ?SplSi1B8:Int,  ?SplSi1B9:Int,  ?SplSi1B10:Int, ?SplSi1B11:Int,
+                   ?SplSi1B12:Int, ?SplSi1B13:Int, ?SplSi1B14:Int, ?SplSi1B15:Int,
+                   ?SplSi1B16:Int, ?SplSi1B17:Int, ?SplSi1B18:Int, ?SplSi1B19:Int,
+                   ?SplSi1B20:Int, ?SplSi1B21:Int, ?SplSi1B22:Int, ?SplSi1B23:Int,
+                   ?SplSi1B24:Int, ?SplSi1B25:Int, ?SplSi1B26:Int, ?SplSi1B27:Int,
+                   ?SplSi1B28:Int, ?SplSi1B29:Int, ?SplSi1B30:Int, ?SplSi1B31:Int)))))
+                 ListItem(Aggregate(variantIdx(0), ListItem(Range(#mkSplPubkey(
+                   ?SplSi2B0:Int,  ?SplSi2B1:Int,  ?SplSi2B2:Int,  ?SplSi2B3:Int,
+                   ?SplSi2B4:Int,  ?SplSi2B5:Int,  ?SplSi2B6:Int,  ?SplSi2B7:Int,
+                   ?SplSi2B8:Int,  ?SplSi2B9:Int,  ?SplSi2B10:Int, ?SplSi2B11:Int,
+                   ?SplSi2B12:Int, ?SplSi2B13:Int, ?SplSi2B14:Int, ?SplSi2B15:Int,
+                   ?SplSi2B16:Int, ?SplSi2B17:Int, ?SplSi2B18:Int, ?SplSi2B19:Int,
+                   ?SplSi2B20:Int, ?SplSi2B21:Int, ?SplSi2B22:Int, ?SplSi2B23:Int,
+                   ?SplSi2B24:Int, ?SplSi2B25:Int, ?SplSi2B26:Int, ?SplSi2B27:Int,
+                   ?SplSi2B28:Int, ?SplSi2B29:Int, ?SplSi2B30:Int, ?SplSi2B31:Int)))))
                ))
              )
            )
@@ -460,11 +592,34 @@ The `#initBorrow` helper resets borrow counters to 0 and sets the correct dynami
     </k>
     requires #functionName(FUNC) ==String "spl_token::entrypoint::cheatcode_is_spl_multisig"
       orBool #functionName(FUNC) ==String "cheatcode_is_spl_multisig"
-    ensures 0 <=Int ?SplMultisigM andBool ?SplMultisigM <Int 256
-      andBool 0 <=Int ?SplMultisigN andBool ?SplMultisigN <Int 256
-      andBool #isSplPubkey(?SplSigner0)
-      andBool #isSplPubkey(?SplSigner1)
-      andBool #isSplPubkey(?SplSigner2)
+    ensures #isByte(?SplMultisigM) andBool #isByte(?SplMultisigN)
+      // signer 0
+      andBool #isByte(?SplSi0B0)  andBool #isByte(?SplSi0B1)  andBool #isByte(?SplSi0B2)  andBool #isByte(?SplSi0B3)
+      andBool #isByte(?SplSi0B4)  andBool #isByte(?SplSi0B5)  andBool #isByte(?SplSi0B6)  andBool #isByte(?SplSi0B7)
+      andBool #isByte(?SplSi0B8)  andBool #isByte(?SplSi0B9)  andBool #isByte(?SplSi0B10) andBool #isByte(?SplSi0B11)
+      andBool #isByte(?SplSi0B12) andBool #isByte(?SplSi0B13) andBool #isByte(?SplSi0B14) andBool #isByte(?SplSi0B15)
+      andBool #isByte(?SplSi0B16) andBool #isByte(?SplSi0B17) andBool #isByte(?SplSi0B18) andBool #isByte(?SplSi0B19)
+      andBool #isByte(?SplSi0B20) andBool #isByte(?SplSi0B21) andBool #isByte(?SplSi0B22) andBool #isByte(?SplSi0B23)
+      andBool #isByte(?SplSi0B24) andBool #isByte(?SplSi0B25) andBool #isByte(?SplSi0B26) andBool #isByte(?SplSi0B27)
+      andBool #isByte(?SplSi0B28) andBool #isByte(?SplSi0B29) andBool #isByte(?SplSi0B30) andBool #isByte(?SplSi0B31)
+      // signer 1
+      andBool #isByte(?SplSi1B0)  andBool #isByte(?SplSi1B1)  andBool #isByte(?SplSi1B2)  andBool #isByte(?SplSi1B3)
+      andBool #isByte(?SplSi1B4)  andBool #isByte(?SplSi1B5)  andBool #isByte(?SplSi1B6)  andBool #isByte(?SplSi1B7)
+      andBool #isByte(?SplSi1B8)  andBool #isByte(?SplSi1B9)  andBool #isByte(?SplSi1B10) andBool #isByte(?SplSi1B11)
+      andBool #isByte(?SplSi1B12) andBool #isByte(?SplSi1B13) andBool #isByte(?SplSi1B14) andBool #isByte(?SplSi1B15)
+      andBool #isByte(?SplSi1B16) andBool #isByte(?SplSi1B17) andBool #isByte(?SplSi1B18) andBool #isByte(?SplSi1B19)
+      andBool #isByte(?SplSi1B20) andBool #isByte(?SplSi1B21) andBool #isByte(?SplSi1B22) andBool #isByte(?SplSi1B23)
+      andBool #isByte(?SplSi1B24) andBool #isByte(?SplSi1B25) andBool #isByte(?SplSi1B26) andBool #isByte(?SplSi1B27)
+      andBool #isByte(?SplSi1B28) andBool #isByte(?SplSi1B29) andBool #isByte(?SplSi1B30) andBool #isByte(?SplSi1B31)
+      // signer 2
+      andBool #isByte(?SplSi2B0)  andBool #isByte(?SplSi2B1)  andBool #isByte(?SplSi2B2)  andBool #isByte(?SplSi2B3)
+      andBool #isByte(?SplSi2B4)  andBool #isByte(?SplSi2B5)  andBool #isByte(?SplSi2B6)  andBool #isByte(?SplSi2B7)
+      andBool #isByte(?SplSi2B8)  andBool #isByte(?SplSi2B9)  andBool #isByte(?SplSi2B10) andBool #isByte(?SplSi2B11)
+      andBool #isByte(?SplSi2B12) andBool #isByte(?SplSi2B13) andBool #isByte(?SplSi2B14) andBool #isByte(?SplSi2B15)
+      andBool #isByte(?SplSi2B16) andBool #isByte(?SplSi2B17) andBool #isByte(?SplSi2B18) andBool #isByte(?SplSi2B19)
+      andBool #isByte(?SplSi2B20) andBool #isByte(?SplSi2B21) andBool #isByte(?SplSi2B22) andBool #isByte(?SplSi2B23)
+      andBool #isByte(?SplSi2B24) andBool #isByte(?SplSi2B25) andBool #isByte(?SplSi2B26) andBool #isByte(?SplSi2B27)
+      andBool #isByte(?SplSi2B28) andBool #isByte(?SplSi2B29) andBool #isByte(?SplSi2B30) andBool #isByte(?SplSi2B31)
     [priority(30), preserves-definedness]
 ```
 
@@ -516,6 +671,55 @@ The `#initBorrow` helper resets borrow counters to 0 and sets the correct dynami
   syntax KItem ::= #splPack ( Evaluation , Operand ) [seqstrict(1)]
   rule <k> #splPack(VAL, operandCopy(DEST)) => #setLocalValue(DEST, SPLDataBuffer(VAL)) ... </k>
   rule <k> #splPack(VAL, operandMove(DEST)) => #setLocalValue(DEST, SPLDataBuffer(VAL)) ... </k>
+```
+
+## sol_memset on SPL data buffers
+
+`sol_memset` is used by `delete_account` to zero out account data. Rather than
+symbolically executing the byte-by-byte loop through `IterMut::next`, we
+intercept the call and directly replace the `SPLDataBuffer` content with a
+zeroed representation.
+
+```{.k .symbolic}
+  // sol_memset(buf, val, len) - fast-path full-buffer zeroization on recognized SPLDataBuffer values.
+  // Any other call shape falls back to the ordinary call semantics below.
+  rule [spl-sol-memset]:
+    <k> #execTerminatorCall(FTY, FUNC,
+          BUF:Operand VAL:Operand LEN:Operand .Operands,
+          DEST, TARGET, UNWIND, SPAN) ~> _CONT
+      => #execSPLSolMemset(FTY, FUNC, #withDeref(BUF), VAL, LEN, BUF, BUF VAL LEN .Operands, DEST, TARGET, UNWIND, SPAN)
+    </k>
+    requires #isSPLSolMemsetFunc(#functionName(FUNC))
+    [priority(30), preserves-definedness]
+
+  syntax KItem ::= #execSPLSolMemset ( Ty, MonoItemKind, Evaluation , Evaluation , Evaluation , Operand, Operands, Place, MaybeBasicBlockIdx, UnwindAction, Span ) [seqstrict(3,4,5)]
+
+  rule <k> #execSPLSolMemset(_, _, SPLDataBuffer(_) #as BUF, VAL, Integer(LEN, 64, false), operandCopy(place(LOCAL, PROJS)), _ARGS, _DEST, TARGET, _UNWIND, _SPAN)
+        => #setLocalValue(place(LOCAL, appendP(PROJS, projectionElemDeref .ProjectionElems)), SPLDataBuffer(Integer(0, 8, false))) ~> #continueAt(TARGET) ... </k>
+    requires #isZeroMemsetValue(VAL)
+     andBool LEN ==Int #splBufferLen(BUF)
+     andBool 0 <Int #splBufferLen(BUF)
+  rule <k> #execSPLSolMemset(_, _, SPLDataBuffer(_) #as BUF, VAL, Integer(LEN, 64, false), operandMove(place(LOCAL, PROJS)), _ARGS, _DEST, TARGET, _UNWIND, _SPAN)
+        => #setLocalValue(place(LOCAL, appendP(PROJS, projectionElemDeref .ProjectionElems)), SPLDataBuffer(Integer(0, 8, false))) ~> #continueAt(TARGET) ... </k>
+    requires #isZeroMemsetValue(VAL)
+     andBool LEN ==Int #splBufferLen(BUF)
+     andBool 0 <Int #splBufferLen(BUF)
+
+  rule [spl-sol-memset-fallback]:
+    <k> #execSPLSolMemset(FTY, FUNC, _BUF, _VAL, _LEN, _BUFOP, ARGS, DEST, TARGET, UNWIND, SPAN) ~> _
+      => #setUpCalleeData(FUNC, ARGS, SPAN)
+    </k>
+    <currentFunc> CALLER => FTY </currentFunc>
+    <currentFrame>
+      <currentBody> _ </currentBody>
+      <caller> OLDCALLER => CALLER </caller>
+      <dest> OLDDEST => DEST </dest>
+      <target> OLDTARGET => TARGET </target>
+      <unwind> OLDUNWIND => UNWIND </unwind>
+      <locals> LOCALS </locals>
+    </currentFrame>
+    <stack> STACK => ListItem(StackFrame(OLDCALLER, OLDDEST, OLDTARGET, OLDUNWIND, LOCALS)) STACK </stack>
+    [owise]
 ```
 
 ## Rent sysvar handling
