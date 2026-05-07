@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from kmir.__main__ import _arg_parser as kmir_arg_parser
 from kmir.__main__ import _parse_args as kmir_parse_args
-from kmir.cargo import CargoProject
+from kmir.cargo import CargoProject, cargo_get_smir_json
 from kmir.options import KMirOpts
 from kmir.options import ProveOpts as KMirProveOpts
 from kmir.options import PruneOpts, RunOpts
@@ -36,11 +36,13 @@ _LOG_FORMAT: Final = '%(levelname)s %(asctime)s %(name)s - %(message)s'
 def _kompass_run(opts: RunOpts) -> None:
     kompass = Kompass(HASKELL_DEF_DIR) if opts.symbolic else Kompass(LLVM_DEF_DIR)
 
-    if opts.file:
-        smir_info = SMIRInfo.from_file(Path(opts.file))
-    else:
-        cargo = CargoProject(Path.cwd())
+    if opts.smir:
+        smir_info = SMIRInfo.from_file(opts.rs_file)
+    elif opts.bin:
+        cargo = CargoProject(opts.rs_file)
         smir_info = cargo.smir_for_project(clean=False)
+    else:
+        smir_info = SMIRInfo(cargo_get_smir_json(opts.rs_file, save_smir=opts.save_smir))
 
     result = kompass.run_smir(smir_info, start_symbol=opts.start_symbol, depth=opts.depth)
     print(kompass.kore_to_pretty(result))
