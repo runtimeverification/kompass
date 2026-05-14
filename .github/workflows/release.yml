@@ -1,0 +1,180 @@
+name: 'Release kompass'
+
+on:
+  push:
+    branches:
+      - release
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  draft-release:
+    name: 'Draft Release'
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.make-release.outputs.version }}
+    steps:
+      - name: 'Check out code'
+        uses: actions/checkout@v4
+      - name: 'Make release'
+        id: 'make-release'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -x
+          VERSION=v$(cat package/version)
+          gh release create "${VERSION}"                \
+            --repo runtimeverification/kompass        \
+            --draft                                     \
+            --title ${VERSION}                          \
+            --target ${{ github.sha }}
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+  release-docker:
+    runs-on: [self-hosted, linux, normal]
+    needs: draft-release
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: 'Setup Docker Buildx'
+        uses: docker/setup-buildx-action@v3.10.0
+
+      - name: 'Login to GitHub Container Registry'
+        uses: docker/login-action@v3.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set Image Name
+        id: set-image-name
+        run: |
+          echo "image-name=ghcr.io/runtimeverification/kompass" >> $GITHUB_OUTPUT
+          echo "kmir-version=$(cat deps/kmir_release)" >> $GITHUB_OUTPUT
+          echo "kompass-version=$(cat package/version)" >> $GITHUB_OUTPUT
+          echo "short-sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Build Kompass Container
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          platforms: linux/amd64
+          push: true
+          build-args: |
+            KMIR_VERSION=${{ steps.set-image-name.outputs.kmir-version }}
+          tags: |
+            ${{ steps.set-image-name.outputs.image-name }}:ubuntu-jammy-${{ steps.set-image-name.outputs.kompass-version }}
+            ${{ steps.set-image-name.outputs.image-name }}:ubuntu-jammy-latest
+
+      # Only the Docker job gates tagging; rollback the draft if the primary artifact never shipped.
+      - name: 'On failure, delete drafted release'
+        if: failure()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -x
+          VERSION=v$(cat package/version)
+          gh release delete ${VERSION}               \
+            --repo runtimeverification/kompass \
+            --yes                                    \
+            --cleanup-tag
+
+  tag-release:
+    runs-on: [self-hosted, linux, normal]
+    needs: [release-docker]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: 'Configure GitHub user'
+        run: |
+          git config user.name devops
+          git config user.email devops@runtimeverification.com
+
+      - name: Tag Release Branch
+        run: |
+          git tag "v$(cat package/version)" origin/release
+          git push origin "v$(cat package/version)"
+
+      - name: 'Finalize Release'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -x
+          VERSION=v$(cat package/version)
+          gh release edit ${VERSION}                 \
+            --repo runtimeverification/kompass \
+            --draft=false
+
+      - name: 'Update dependents'
+        run: |
+          set -x
+          VERSION=$(cat package/version)
+          curl --fail                                                          \
+            -X POST                                                            \
+            -H "Accept: application/vnd.github+json"                           \
+            -H "Authorization: Bearer ${{ secrets.JENKINS_GITHUB_PAT }}"       \
+            -H "X-GitHub-Api-Version: 2022-11-28"                              \
+            https://api.github.com/repos/runtimeverification/devops/dispatches \
+            -d '{"event_type":"on-demand-test","client_payload":{"repo":"runtimeverification/kompass","version":"'${VERSION}'"}}'
+
+  nix-cache:
+    name: 'Populate Nix Cache'
+    strategy:
+      matrix:
+        runner: [normal, ARM64]
+    runs-on: [self-hosted, linux, ${{ matrix.runner }}]
+    needs: draft-release
+    steps:
+      - name: 'Check out code'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.push.head.sha }}
+          fetch-depth: 0
+
+      - name: 'Build and cache kompass'
+        uses: workflow/nix-shell-action@v3
+        env:
+          GC_DONT_GC: 1
+          CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_PUBLIC_TOKEN }}
+        with:
+          packages: jq
+          script: |
+            KOMPASS=$(nix build --extra-experimental-features 'nix-command flakes' .#kompass --json | jq -r '.[].outputs | to_entries[].value')
+            DRV=$(nix-store --query --deriver ${KOMPASS})
+            nix-store --query --requisites --include-outputs ${DRV} | cachix push k-framework
+
+  nix-binary-cache:
+    name: 'Populate Nix Binary Cache'
+    strategy:
+      matrix:
+        runner: [normal, ARM64]
+    runs-on: [self-hosted, linux, ${{ matrix.runner }}]
+    needs: draft-release
+    steps:
+      - name: 'Check out code'
+        uses: actions/checkout@v4
+
+      - name: 'Publish kompass to k-framework-binary cache'
+        uses: workflow/nix-shell-action@v3
+        env:
+          CACHIX_AUTH_TOKEN: '${{ secrets.CACHIX_PRIVATE_KFB_TOKEN }}'
+          GC_DONT_GC: '1'
+          OWNER_REPO: '${{ github.repository }}'
+          REV: '${{ github.sha }}'
+        with:
+          packages: jq
+          script: |
+            export PATH="$(nix build github:runtimeverification/kup --no-link --json | jq -r '.[].outputs | to_entries[].value')/bin:$PATH"
+            kup publish k-framework-binary .#kompass --keep-days 180 || true
+
+            # Cachix has not been responding to 'cachix pin' requests made under the hood by kup. So we need to manually verify the push and pin.
+            .github/scripts/check-cachix-pin.sh
