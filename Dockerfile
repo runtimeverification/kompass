@@ -14,7 +14,7 @@ RUN chown -R kmir:kmir /home/kmir/.kompass
 USER kmir:kmir
 RUN rustup toolchain list  && \
     cd /home/kmir/.kompass && \
-    make                   && \
-    pip install .
+    pip install .          && \
+    kdist -v build kompass.* -j4
 
 CMD ["kompass", "--help"]
