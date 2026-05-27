@@ -19,6 +19,12 @@ jobs:
         with:
           token: ${{ secrets.JENKINS_GITHUB_PAT }}
           submodules: true
+      - name: 'Sync uv version with mir-semantics'
+        run: |
+          KMIR_VERSION=$(cat deps/kmir_release)
+          curl -sf https://raw.githubusercontent.com/runtimeverification/mir-semantics/v${KMIR_VERSION}/deps/uv_release > deps/uv_release
+          git add deps/uv_release
+          git commit -m "Sync uv version with mir-semantics v${KMIR_VERSION}" || true
       - name: 'Get uv release'
         id: uv_release
         run: |
