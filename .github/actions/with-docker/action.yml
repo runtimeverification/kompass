@@ -35,8 +35,11 @@ runs:
       USER_ID=1000
       GROUP_ID=${USER_ID}
 
+      UV_VERSION=$(cat deps/uv_release)
+
       docker build . --tag ${TAG}           \
         --file .github/workflows/Dockerfile \
+        --build-arg UV_VERSION=${UV_VERSION} \
         --build-arg KMIR_VERSION=${KMIR_VERSION} \
         --build-arg USER=${USER}            \
         --build-arg GROUP=${GROUP}          \
