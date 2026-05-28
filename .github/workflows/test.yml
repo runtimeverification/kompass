@@ -133,7 +133,7 @@ jobs:
           echo "kompass-version=$(cat package/version)" >> $GITHUB_OUTPUT
           echo "short-sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-      - name: Build Kmir Container
+      - name: Build Kompass Container
         uses: docker/build-push-action@v6
         with:
           context: .
