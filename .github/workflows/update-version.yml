@@ -19,11 +19,20 @@ jobs:
         with:
           token: ${{ secrets.JENKINS_GITHUB_PAT }}
           submodules: true
-      - name: 'Install uv'
+      - name: 'Sync uv version with mir-semantics'
         run: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo ${HOME}/.local/bin >> $GITHUB_PATH
-          uv --version
+          KMIR_VERSION=$(cat deps/kmir_release)
+          curl -sf https://raw.githubusercontent.com/runtimeverification/mir-semantics/v${KMIR_VERSION}/deps/uv_release > deps/uv_release
+          git add deps/uv_release
+          git commit -m "Sync uv version with mir-semantics v${KMIR_VERSION}" || true
+      - name: 'Get uv release'
+        id: uv_release
+        run: |
+          echo uv_version=$(cat deps/uv_release) >> "${GITHUB_OUTPUT}"
+      - name: 'Install uv'
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ steps.uv_release.outputs.uv_version }}
       - name: 'Update kmir release tag'
         run: |
           KMIR_VERSION=$(cat ./deps/kmir_release)
